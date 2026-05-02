@@ -1,10 +1,25 @@
 # Crypto Trading Suite
 
+[![Tests](https://github.com/raianbagautdinov95/risk-discipline-assistant/actions/workflows/tests.yml/badge.svg)](https://github.com/raianbagautdinov95/risk-discipline-assistant/actions/workflows/tests.yml)
+[![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/)
+[![Flutter](https://img.shields.io/badge/flutter-3.x-blue.svg)](https://flutter.dev/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Discipline-first toolkit for crypto traders: a Telegram bot that audits every trade you're about to take, a market scanner that produces actionable BUY/SELL ideas, and a Flutter web dashboard that ties them together.
 
 This is **not** a trading advisor. It does not predict price. It checks your risk, leverage, R:R and emotional state against the rules you set, and refuses trades that would blow up your account.
 
 > ⚠️ Not financial advice. The bot helps you keep risk and discipline. Decisions and responsibility are yours.
+
+<!-- Replace these placeholders once you record screenshots / GIFs:
+     1. docs/screenshots/dashboard.png   — Flutter "Today" tab
+     2. docs/screenshots/discipline.png  — Discipline tab with calendar heatmap
+     3. docs/screenshots/telegram.gif    — voice message → trade prefill flow
+-->
+
+![Today dashboard](docs/screenshots/dashboard.png)
+![Discipline page](docs/screenshots/discipline.png)
+![Telegram voice flow](docs/screenshots/telegram.gif)
 
 ---
 
@@ -71,8 +86,8 @@ The three talk to each other over HTTP. You can run any one of them on its own.
 You need Docker Desktop, a Telegram bot token from `@BotFather`, and (optionally) Ollama installed locally.
 
 ```bash
-git clone https://github.com/yourname/crypto-trading-suite.git
-cd crypto-trading-suite/crypto-discipline-bot
+git clone https://github.com/raianbagautdinov95/risk-discipline-assistant.git
+cd risk-discipline-assistant/crypto-discipline-bot
 
 cp .env.example .env
 # Edit .env: set BOT_TOKEN, POSTGRES_PASSWORD, OLLAMA_BASE_URL
@@ -213,6 +228,10 @@ pytest -q
 Covers position-size math, R:R, all eight blocking rules, AI vetoes, decision-engine combinations.
 
 ---
+
+## Architecture & Design Decisions
+
+Read [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for a short ADR-style write-up of the main technical decisions: why two AI tiers, why Ollama-first, why two FastAPI services, why async SQLAlchemy, etc.
 
 ## Roadmap
 
