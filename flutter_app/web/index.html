@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="AI Risk & Discipline Assistant — risk officer для крипто-трейдера. Проверяет дисциплину, риск и эмоции перед входом в сделку.">
+  <meta name="theme-color" content="#0E1018">
+
+  <!-- Open Graph / social sharing -->
+  <meta property="og:title" content="AI Risk & Discipline Assistant">
+  <meta property="og:description" content="Risk officer и discipline coach для крипто-трейдера.">
+  <meta property="og:type" content="website">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Risk Assistant">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>AI Risk & Discipline Assistant</title>
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* Initial loading screen — shown until Flutter boots */
+    html, body { margin: 0; padding: 0; background: #0E1018; }
+    #boot {
+      position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 24px;
+      color: #E8EAF0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+    }
+    #boot .logo {
+      width: 64px; height: 64px;
+      background: linear-gradient(135deg, #7B7BFF, #5B5BFF);
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 32px rgba(123, 123, 255, 0.4);
+    }
+    #boot .logo svg { width: 32px; height: 32px; }
+    #boot .title { font-size: 16px; font-weight: 700; letter-spacing: 0.3px; }
+    #boot .subtitle { font-size: 12px; color: #6A7088; }
+    #boot .spinner {
+      width: 28px; height: 28px;
+      border: 2px solid #2A2F40;
+      border-top-color: #7B7BFF;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div id="boot">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+    </div>
+    <div style="text-align: center;">
+      <div class="title">AI Risk & Discipline Assistant</div>
+      <div class="subtitle">Загрузка…</div>
+    </div>
+    <div class="spinner"></div>
+  </div>
+  <script>
+    // Hide the boot screen once Flutter renders.
+    window.addEventListener('flutter-first-frame', function () {
+      const boot = document.getElementById('boot');
+      if (boot) {
+        boot.style.transition = 'opacity 280ms ease';
+        boot.style.opacity = '0';
+        setTimeout(function () { boot.remove(); }, 320);
+      }
+    });
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

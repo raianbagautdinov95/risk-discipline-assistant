@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# Environments / secrets
+.env
+.env.local
+.env.*.local
+
+# Tests / coverage
+.pytest_cache/
+pytest-cache-files-*/
+.coverage
+htmlcov/
+.tox/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.swp
+.DS_Store
+
+# Flutter
+flutter_app/build/
+flutter_app/.dart_tool/
+flutter_app/.flutter-plugins
+flutter_app/.flutter-plugins-dependencies
+flutter_app/.packages
+flutter_app/pubspec.lock
+
+# Docker
+*.log
+postgres-data/
+
+# Local data
+logs/
+data/
+reports/
+*.sqlite3
+*.db

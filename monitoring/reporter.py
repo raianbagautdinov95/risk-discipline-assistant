@@ -1,53 +1,80 @@
-
-from typing import Dict, Any, List
-from datetime import datetime
+"""История сигналов. Сохраняет каждый НЕ-HOLD сигнал в JSON-файл.
+Пригодится потом, когда будете оценивать: какие сигналы отработали, какие — нет."""
 import json
 from pathlib import Path
+from datetime import datetime
+from typing import Dict, Any, List
+
+import numpy as np
 
 
-class Reporter:
-    def __init__(self):
-        self.report_dir = Path("reports")
-        self.report_dir.mkdir(exist_ok=True)
-        self.daily_trades = []
+class _NumpyAwareEncoder(json.JSONEncoder):
+    """Умеет сериализовать numpy-типы (bool_, int64, float64, ndarray и т.д.).
+    Нужно потому, что pandas/numpy часто подсовывают свои типы вместо нативных Python."""
+    def default(self, obj):
+        if isinstance(obj, np.bool_):
+            return bool(obj)
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super().default(obj)
 
-    def add_trade(self, trade_data: Dict[str, Any]):
 
-        trade_data["timestamp"] = datetime.now().isoformat()
-        self.daily_trades.append(trade_data)
+class SignalHistory:
+    def __init__(self, reports_dir: str = "reports"):
+        self.dir = Path(reports_dir)
+        self.dir.mkdir(exist_ok=True)
+        self.file = self.dir / "signals_history.json"
 
-    def generate_daily_report(self) -> Dict[str, Any]:
+    def record(self, signal: Dict[str, Any], ai_review: Dict[str, Any] = None) -> None:
+        """Добавляет сигнал в историю. HOLD-сигналы пропускаются (их много и они неинтересны)."""
+        if signal.get("action") == "HOLD":
+            return
 
-        if not self.daily_trades:
-            return {"message": "No trades today"}
-
-        total_trades = len(self.daily_trades)
-        winning_trades = sum(1 for t in self.daily_trades if t.get("pnl", 0) > 0)
-        total_pnl = sum(t.get("pnl", 0) for t in self.daily_trades)
-
-        report = {
-            "date": datetime.now().strftime("%Y-%m-%d"),
-            "total_trades": total_trades,
-            "winning_trades": winning_trades,
-            "win_rate": round((winning_trades / total_trades * 100), 2) if total_trades > 0 else 0,
-            "total_pnl": round(total_pnl, 2),
-            "trades": self.daily_trades
+        entry = {
+            "datetime": datetime.utcnow().isoformat() + "Z",
+            **signal,
         }
+        if ai_review:
+            entry["ai_review"] = ai_review
 
+        data = self._load()
+        data.append(entry)
+        # Не храним больше 1000 записей, чтобы файл не распухал.
+        data = data[-1000:]
+        self.file.write_text(
+            json.dumps(data, indent=2, ensure_ascii=False, cls=_NumpyAwareEncoder),
+            encoding="utf-8",
+        )
 
-        filename = self.report_dir / f"daily_report_{datetime.now():%Y%m%d}.json"
-        with open(filename, "w") as f:
-            json.dump(report, f, indent=2)
+    def _load(self) -> List[Dict[str, Any]]:
+        if not self.file.exists():
+            return []
+        try:
+            return json.loads(self.file.read_text(encoding="utf-8"))
+        except Exception:
+            return []
 
-        return report
+    def summary(self) -> Dict[str, Any]:
+        """Сводка по накопленной истории для быстрого обзора."""
+        data = self._load()
+        if not data:
+            return {"total": 0, "buy": 0, "sell": 0, "by_symbol": {}}
 
-    def print_summary(self):
+        buy = sum(1 for s in data if s.get("action") == "BUY")
+        sell = sum(1 for s in data if s.get("action") == "SELL")
+        by_symbol: Dict[str, int] = {}
+        for s in data:
+            by_symbol[s["symbol"]] = by_symbol.get(s["symbol"], 0) + 1
 
-        report = self.generate_daily_report()
-        print("\n" + "=" * 50)
-        print(f"DAILY TRADING REPORT - {report.get('date', 'N/A')}")
-        print("=" * 50)
-        print(f"Total Trades: {report.get('total_trades', 0)}")
-        print(f"Win Rate: {report.get('win_rate', 0)}%")
-        print(f"Total P&L: {report.get('total_pnl', 0)} USDT")
-        print("=" * 50)
+        return {
+            "total": len(data),
+            "buy": buy,
+            "sell": sell,
+            "by_symbol": by_symbol,
+            "first": data[0].get("datetime"),
+            "last": data[-1].get("datetime"),
+        }

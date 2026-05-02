@@ -1,15 +1,12 @@
+"""Параметры управления риском для РАСЧЁТА сигналов (не для торговли).
+Используются, чтобы в уведомлении предложить разумный стоп-лосс и тейк-профит."""
 from dataclasses import dataclass
 
 
 @dataclass
 class RiskLimits:
-    max_daily_loss: float = 100.0  # USDT
-    max_position_size_pct: float = 10.0  # % of capital
-    max_leverage: int = 10
-    risk_per_trade: float = 1.0  # % of capital
+    # Минимально приемлемое соотношение риск/прибыль. Сигналы ниже — отбрасываются.
+    min_risk_reward: float = 1.5
 
-
-@dataclass
-class AccountLimits:
-    min_capital_required: float = 1000.0
-    max_drawdown_threshold: float = 15.0  # %
+    # Порог консенсуса индикаторов, при котором сигнал считается сильным.
+    strong_signal_threshold: float = 75.0
