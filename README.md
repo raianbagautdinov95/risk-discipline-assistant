@@ -1,249 +1,650 @@
-# Crypto Trading Suite
+# Risk Discipline Assistant
 
-[![Tests](https://github.com/raianbagautdinov95/risk-discipline-assistant/actions/workflows/tests.yml/badge.svg)](https://github.com/raianbagautdinov95/risk-discipline-assistant/actions/workflows/tests.yml)
-[![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/)
-[![Flutter](https://img.shields.io/badge/flutter-3.x-blue.svg)](https://flutter.dev/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+> **Production-ready AI risk management platform that combines deterministic business rules with LLM-powered decision support.**
 
-Discipline-first toolkit for crypto traders: a Telegram bot that audits every trade you're about to take, a market scanner that produces actionable BUY/SELL ideas, and a Flutter web dashboard that ties them together.
+Unlike typical AI trading assistants, this system never delegates critical decisions to an LLM.
 
-This is **not** a trading advisor. It does not predict price. It checks your risk, leverage, R:R and emotional state against the rules you set, and refuses trades that would blow up your account.
-
-> ⚠️ Not financial advice. The bot helps you keep risk and discipline. Decisions and responsibility are yours.
+Instead, it combines a deterministic rule engine with multi-stage AI reasoning to create predictable, testable, and production-oriented workflows.
 
 ---
 
-## What's inside
+## Problem
 
-The repo is a small monorepo with three independent components.
+Most AI trading assistants rely entirely on LLMs.
 
-| Folder | What it is |
-|---|---|
-| `crypto-discipline-bot/` | Discipline backend — FastAPI + Telegram bot + Postgres |
-| `.` (root: `main.py`, `api.py`, `ai/`, etc.) | Signal scanner — separate FastAPI service that scans 10 OKX pairs |
-| `flutter_app/` | Web dashboard / PWA — installable from Chrome, dark + light themes |
+This creates several issues:
 
-The three talk to each other over HTTP. You can run any one of them on its own.
+- unpredictable decisions
+- hallucinations
+- inconsistent recommendations
+- difficult testing
+- poor production reliability
 
----
-
-## Highlights
-
-**Discipline engine** — eight hard rules that block a trade automatically: no stop-loss, risk above limit, R:R below threshold, leverage above limit, daily loss reached, two losses in a row, revenge-trading wording, bad emotional state.
-
-**Two-tier AI audit** — a strict Risk Officer (Claude or local Ollama) with veto power, plus a softer Coach (OpenAI or local Ollama) that explains pros/cons. Rules > Officer > Coach. Falls back to pure rule logic when no AI is configured.
-
-**Local-first AI** — runs entirely on local Ollama (`qwen2.5-coder:7b`, `llama3.1:8b`, etc.). Zero API costs, full privacy. Cloud APIs are optional fallbacks.
-
-**Voice input** — record a voice note like *"BTC long 67500, stop 66800, take 69200"* and the bot transcribes (Whisper), parses it, and pre-fills the discipline check. Three follow-up questions instead of thirteen.
-
-**Habit-forming UX** — calendar heatmap, daily streaks, personal records pushed as Telegram messages, weekly AI review on Sundays, morning intent check-in at 09:00 UTC, evening pending-trades reminder at 22:00 UTC.
-
-**Market scanner** — separate service that runs every 15 minutes, multi-timeframe analysis (4H trend / 1H direction / 15m entry), tight confidence filters, strict confluence requirements. Pushes new signals into Telegram with an inline "Check discipline" button.
-
-**Production-grade web app** — Flutter Web compiled to PWA, Inter typography, glassmorphism app bar, hover states, animated counters, staggered list animations, fl_chart equity curves with gradient fills, calendar heatmap, light/dark theme toggle.
+For financial applications, business logic should remain deterministic.
 
 ---
 
-## Architecture
+## Solution
+
+Risk Discipline Assistant separates deterministic validation from AI reasoning.
 
 ```
-                         ┌──────────────────┐
-                         │  Flutter Web/PWA │
-                         │   :8080          │
-                         └────────┬─────────┘
-                                  │
-          ┌──────────────────────┼──────────────────────────┐
-          │                      │                          │
-    ┌─────┴──────┐        ┌──────┴──────┐           ┌───────┴───────┐
-    │ Signal Bot │        │ Discipline  │           │  Telegram Bot │
-    │  :8765     │        │  Backend    │◄──────────┤  (aiogram)    │
-    │ (scanner)  │        │  FastAPI    │           │               │
-    └────────────┘        │  :8009      │           └───────┬───────┘
-                          └──────┬──────┘                   │
-                                 │                          │
-                          ┌──────┴──────┐                   │
-                          │  Postgres   │                   │
-                          │  + Ollama   │◄──────────────────┘
-                          │  (local AI) │
-                          └─────────────┘
+Trade Request
+      │
+      ▼
+Deterministic Rule Engine
+      │
+      ▼
+AI Risk Officer
+      │
+      ▼
+AI Coach
+      │
+      ▼
+Final Decision
+```
+
+Business rules always have the highest priority.
+
+The AI layer never overrides deterministic validation.
+
+Instead, it explains decisions, detects psychological bias, and provides contextual coaching.
+
+---
+
+## Engineering Highlights
+
+- Designed deterministic rule engine with eight blocking risk rules.
+- Built multi-stage AI decision pipeline.
+- Integrated OpenAI, Anthropic and Ollama behind a provider abstraction.
+- Implemented asynchronous FastAPI backend with PostgreSQL.
+- Developed Telegram Bot and Flutter Web client.
+- Added local-first AI deployment using Ollama.
+- Implemented voice trade analysis with Whisper.
+- Docker Compose deployment.
+- CI-ready architecture.
+- Modular service-oriented design.
+
+---
+
+# Why this architecture?
+
+Large Language Models are excellent at reasoning, but they should not be responsible for enforcing critical business rules.
+
+In financial software, deterministic validation must remain the source of truth.
+
+For this reason, the application follows a layered decision architecture:
+
+```
+               Business Rules
+                     │
+                     ▼
+         Deterministic Validation
+                     │
+                     ▼
+            AI Risk Officer
+                     │
+                     ▼
+               AI Coach
+                     │
+                     ▼
+             Final User Feedback
+```
+
+Each layer has a clearly defined responsibility.
+
+## Deterministic Rule Engine
+
+Responsible for:
+
+- stop-loss validation
+- risk percentage
+- leverage limits
+- minimum Risk/Reward ratio
+- daily loss protection
+- consecutive loss protection
+- emotional state validation
+- revenge trading detection
+
+These rules are fully deterministic and independently testable.
+
+---
+
+## AI Risk Officer
+
+The Risk Officer performs contextual analysis after deterministic validation.
+
+Its responsibilities include:
+
+- identifying hidden risks
+- reviewing trade quality
+- evaluating trading discipline
+- detecting inconsistent reasoning
+- providing an additional approval layer
+
+The Risk Officer can veto trades that satisfy deterministic rules but still exhibit unacceptable risk characteristics.
+
+---
+
+## AI Coach
+
+Unlike the Risk Officer, the Coach never blocks a trade.
+
+Instead, it explains:
+
+- strengths of the setup
+- weaknesses
+- possible improvements
+- psychological observations
+- educational feedback
+
+Separating coaching from validation keeps business logic predictable while still benefiting from LLM reasoning.
+
+---
+
+## Why not use AI for everything?
+
+Many AI applications allow an LLM to become the primary decision-maker.
+
+This project intentionally avoids that architecture.
+
+Instead, AI is treated as an intelligent assistant rather than the source of truth.
+
+This design improves:
+
+- predictability
+- reproducibility
+- testing
+- maintainability
+- production reliability
+
+- ---
+
+# Architecture Decisions
+
+This project was designed with production-oriented principles rather than simply integrating AI APIs.
+
+Every major technology choice was made to improve maintainability, scalability and reliability.
+
+---
+
+## Why FastAPI?
+
+FastAPI was selected because it provides:
+
+- asynchronous request handling
+- excellent typing support
+- automatic OpenAPI documentation
+- dependency injection
+- high performance
+- clean modular architecture
+
+These characteristics make it well suited for AI backends that orchestrate multiple external providers.
+
+---
+
+## Why PostgreSQL?
+
+Trading discipline generates structured, relational data.
+
+PostgreSQL provides:
+
+- ACID transactions
+- reliable persistence
+- strong indexing
+- JSON support
+- mature migration tooling
+
+Unlike NoSQL databases, PostgreSQL guarantees consistency for user journals and trading history.
+
+---
+
+## Why Async SQLAlchemy?
+
+The backend communicates with:
+
+- Telegram
+- AI providers
+- PostgreSQL
+- Signal Scanner
+
+Using asynchronous SQLAlchemy allows these operations to run efficiently without blocking request processing.
+
+---
+
+## Why Ollama?
+
+Most AI applications depend entirely on cloud APIs.
+
+This project supports local inference through Ollama to provide:
+
+- zero API costs
+- improved privacy
+- lower latency
+- offline capability
+- provider independence
+
+Cloud providers remain optional rather than mandatory.
+
+---
+
+## Why Multiple AI Providers?
+
+Different models have different strengths.
+
+The provider abstraction allows switching between:
+
+- OpenAI
+- Anthropic
+- Ollama
+
+without changing the business logic.
+
+This reduces vendor lock-in and makes experimentation significantly easier.
+
+---
+
+## Why Telegram?
+
+Most traders already spend significant time inside Telegram.
+
+Instead of building another standalone application, the system integrates directly into an existing workflow.
+
+Reducing friction increases the probability that users actually follow their discipline process.
+
+---
+
+## Why Docker?
+
+The complete development environment can be reproduced with a single command.
+
+Docker provides:
+
+- identical environments
+- reproducible deployments
+- simplified onboarding
+- infrastructure portability
+
+This significantly reduces deployment complexity.
+
+---
+
+## Why Service Separation?
+
+The repository intentionally separates responsibilities into multiple services.
+
+Each service has a single responsibility:
+
+- Discipline Backend
+- Telegram Bot
+- Signal Scanner
+- Flutter Dashboard
+
+This architecture allows components to evolve independently while remaining loosely coupled.
+
+---
+
+# Engineering Challenges
+
+Building AI applications is relatively easy.
+
+Building reliable AI systems is significantly more difficult.
+
+During development several engineering challenges had to be addressed.
+
+---
+
+## Challenge 1 — Preventing AI from becoming the source of truth
+
+Many AI applications simply send a prompt to an LLM and trust the response.
+
+This approach is unsuitable for financial applications where incorrect recommendations may lead to financial losses.
+
+### Solution
+
+The system validates every trade using deterministic business rules before AI analysis begins.
+
+The LLM never executes business logic.
+
+Instead it performs contextual reasoning on top of validated data.
+
+---
+
+## Challenge 2 — AI Provider Independence
+
+Depending on a single provider creates multiple risks:
+
+- pricing changes
+- outages
+- rate limits
+- vendor lock-in
+
+### Solution
+
+The application introduces an abstraction layer that supports multiple providers:
+
+- OpenAI
+- Anthropic
+- Ollama
+
+Switching providers requires configuration changes rather than code changes.
+
+---
+
+## Challenge 3 — Local AI Support
+
+Many users prefer not to send financial information to cloud providers.
+
+### Solution
+
+The system supports fully local inference through Ollama.
+
+Users can deploy the complete application without relying on external AI services.
+
+This improves privacy while eliminating API costs.
+
+---
+
+## Challenge 4 — Reducing User Friction
+
+Long forms discourage traders from consistently following their discipline process.
+
+### Solution
+
+Voice messages are automatically transcribed using Whisper.
+
+The extracted information pre-fills the trade validation workflow, reducing manual input and making discipline checks significantly faster.
+
+---
+
+## Challenge 5 — Separation of Responsibilities
+
+Combining Telegram logic, AI orchestration, business rules and signal generation into a single service quickly becomes difficult to maintain.
+
+### Solution
+
+The project separates responsibilities into independent services:
+
+- Telegram Bot
+- Discipline Backend
+- Signal Scanner
+- Flutter Dashboard
+
+Each service has a clearly defined responsibility and communicates over HTTP.
+
+This architecture improves maintainability and simplifies future scaling.
+
+---
+
+# Engineering Trade-offs
+
+Every architecture is a collection of trade-offs rather than perfect decisions.
+
+Several deliberate compromises were made during development.
+
+---
+
+## Rule Engine before AI
+
+### Pros
+
+- predictable
+- testable
+- deterministic
+- easy to debug
+
+### Cons
+
+- less flexible
+- requires manual rule maintenance
+
+The increased reliability outweighs the additional maintenance cost.
+
+---
+
+## Local AI Support
+
+### Pros
+
+- privacy
+- zero API costs
+- offline capability
+
+### Cons
+
+- slower inference
+- hardware requirements
+
+Cloud providers remain available for users prioritizing speed.
+
+---
+
+## Multiple Services
+
+### Pros
+
+- clear separation of concerns
+- easier maintenance
+- better scalability
+
+### Cons
+
+- more deployment complexity
+- additional infrastructure
+
+The modular architecture is better suited for long-term evolution than a monolithic application.
+
+---
+
+## Multiple AI Providers
+
+### Pros
+
+- avoids vendor lock-in
+- easier experimentation
+- improved reliability
+
+### Cons
+
+- additional abstraction layer
+- more integration testing
+
+The flexibility gained outweighs the small implementation complexity.
+
+---
+
+# Performance & Scalability
+
+Although the project is primarily designed as a personal discipline platform, the architecture allows future scaling with minimal changes.
+
+## Current Architecture
+
+The current implementation supports:
+
+- asynchronous request processing
+- modular service separation
+- provider abstraction
+- independent AI backends
+- isolated frontend and backend applications
+
+This makes horizontal scaling significantly easier than tightly coupled monolithic solutions.
+
+---
+
+## Scaling Strategy
+
+As user traffic increases, the architecture can evolve incrementally.
+
+### API Layer
+
+Multiple FastAPI instances behind a reverse proxy.
+
+```
+Users
+   │
+   ▼
+NGINX
+   │
+ ┌─┴────────────┐
+ │              │
+ ▼              ▼
+FastAPI      FastAPI
+ │              │
+ └──────┬───────┘
+        ▼
+   PostgreSQL
 ```
 
 ---
 
-## Quick start (Docker)
+### Background Processing
 
-You need Docker Desktop, a Telegram bot token from `@BotFather`, and (optionally) Ollama installed locally.
+Long-running AI operations can be moved into background workers.
 
-```bash
-git clone https://github.com/raianbagautdinov95/risk-discipline-assistant.git
-cd risk-discipline-assistant/crypto-discipline-bot
+Examples:
 
-cp .env.example .env
-# Edit .env: set BOT_TOKEN, POSTGRES_PASSWORD, OLLAMA_BASE_URL
+- AI reviews
+- market scanning
+- weekly reports
+- voice transcription
+- notifications
 
-docker compose up -d --build
-docker compose exec api alembic upgrade head
-docker compose logs -f bot
-```
+This prevents API requests from blocking user interactions.
 
-When you see `Run polling for bot @YourBot`, open Telegram, find your bot, send `/start`. New users go through a 3-step onboarding wizard that sets risk limits based on their style.
+Potential technologies:
 
-The web dashboard is a separate process:
-
-```bash
-cd ../flutter_app
-flutter pub get
-flutter run -d web-server --web-port 8080
-```
-
-Open `http://localhost:8080`. In **Settings**, paste your Telegram ID (find it via `@userinfobot`) — the dashboard then mirrors your Telegram journal.
-
-The signal scanner is also separate:
-
-```bash
-cd ..
-pip install -r requirements.txt
-uvicorn api:app --host 0.0.0.0 --port 8765
-```
+- Celery
+- Redis
+- RabbitMQ
 
 ---
 
-## Local AI (Ollama)
+### Database Scaling
 
-The bot prefers a local model over cloud APIs. After installing Ollama:
+The application currently uses PostgreSQL as the primary datastore.
 
-```bash
-ollama pull qwen2.5-coder:7b   # 4.7 GB, recommended
-# or smaller / faster:
-ollama pull llama3.2:3b        # 2 GB
-```
+Future improvements may include:
 
-Then in `.env`:
+- read replicas
+- connection pooling
+- caching
+- query optimization
 
-```env
-OLLAMA_BASE_URL=http://host.docker.internal:11434
-OLLAMA_MODEL_COACH=qwen2.5-coder:7b
-OLLAMA_MODEL_OFFICER=qwen2.5-coder:7b
-```
-
-On a GPU (CUDA, Metal), responses come back in 2–3 seconds. On CPU expect 15–30 seconds.
+without requiring changes to business logic.
 
 ---
 
-## Telegram commands
+### AI Scaling
 
-| Command | What it does |
-|---|---|
-| `/start` | First-run wizard for new users; menu for returning |
-| `/trade` | 13-step FSM for a discipline check |
-| `/journal` | Last 10 trades with outcome icons |
-| `/stats` | Total + win-rate + average P&L + common forbid reasons |
-| `/close <id> win\|loss\|breakeven [pnl%]` | Mark a trade as closed |
-| `/calc <deposit> <risk%> <entry> <stop> [leverage]` | Position-size calculator |
-| `/export` | Send the full journal as a CSV |
-| `/remind` | Show currently-open trades right now |
-| `/review` | Generate an AI weekly review on demand |
-| `/plan` | Set today's intent (watch / few / active / off) |
-| `/scan` | Force a market scan (10–30 sec) |
-| `/signals` | List active signals from cache |
-| `/analyze BTC-USDT` | Per-pair analysis with reasons |
-| `/settings` | Tweak risk limits inline |
-| `/rules` | Show the eight hard rules |
-| Voice message | Transcribed + parsed → starts the FSM with prefilled fields |
+The provider abstraction allows distributing requests across multiple models.
 
-There's a persistent reply-keyboard with the eight most common actions.
+Example:
+
+- OpenAI for reasoning
+- Ollama for local inference
+- Anthropic for deep analysis
+
+Each provider can be enabled or disabled through configuration.
 
 ---
 
-## Web dashboard tabs
+# Production Readiness
 
-1. **Today** — greeting, KPIs (streak, win-rate, today's count), big "check a trade" CTA, teasers of active signals and pending trades.
-2. **Signals** — terminal-style cards with confidence bar, entry / SL / TP / R:R pills, "Check discipline" button per signal.
-3. **Check** — sectioned form (Trade / Risk / Discipline). Result card is a cinematic gradient hero with score, computations, violations, AI commentary.
-4. **Journal** — searchable, filterable list (All / Allowed / Forbidden / Wait / Wins / Losses / Pending). Tap a card for the full detail screen with "Repeat" and "Close" actions.
-5. **Discipline** — animated KPI tiles, equity curve, win-rate per day, calendar heatmap (12 weeks × 7 days), achievements, share-as-PNG.
-6. **Settings** — Telegram ID + risk limits + about.
+The project was designed with production deployment in mind.
 
----
+## Already Implemented
 
-## Tech stack
-
-**Backend**: Python 3.11 · FastAPI · async SQLAlchemy 2.0 · Alembic · PostgreSQL 16 · aiogram 3.x · OpenAI · Anthropic · Ollama · httpx · Docker Compose
-
-**Frontend**: Flutter 3.x · Material 3 · `google_fonts` (Inter) · `fl_chart` · `shared_preferences` · PWA
-
-**Signal scanner**: pandas · `ta` (technical indicators) · OKX REST API · DeepSeek (optional)
-
-**Tests**: pytest + pytest-asyncio (29 unit tests on rule engine + decision engine)
+- Docker Compose deployment
+- environment-based configuration
+- database migrations
+- asynchronous backend
+- modular architecture
+- CI tests
+- provider abstraction
+- local AI deployment
+- API documentation
+- isolated frontend/backend
 
 ---
 
-## Configuration
+## Planned Improvements
 
-All secrets are loaded from `.env`. Nothing is hardcoded. Both subprojects (`crypto-discipline-bot/`, root signal scanner) ship a `.env.example`.
+- Redis caching
+- Celery task queue
+- JWT authentication
+- Prometheus metrics
+- Grafana dashboards
+- rate limiting
+- centralized logging
+- Kubernetes deployment
+- distributed tracing
+- object storage
 
-Key variables for the discipline bot:
+- ---
 
-```env
-BOT_TOKEN=                         # Telegram bot token from @BotFather
-DATABASE_URL=                      # postgresql+asyncpg://...
-ALEMBIC_DATABASE_URL=              # postgresql+psycopg2://... (sync, for migrations)
+# Engineering Philosophy
 
-OPENAI_API_KEY=                    # optional — Coach + Whisper voice
-ANTHROPIC_API_KEY=                 # optional — Risk Officer
-OLLAMA_BASE_URL=                   # http://host.docker.internal:11434 if local
-OLLAMA_MODEL_COACH=qwen2.5-coder:7b
-OLLAMA_MODEL_OFFICER=qwen2.5-coder:7b
+The primary goal of this project was never to build another AI chatbot.
 
-SIGNAL_BOT_URL=http://host.docker.internal:8765   # signal scanner
-DEFAULT_MAX_RISK_PERCENT=1.0
-DEFAULT_MAX_LEVERAGE=5
-DEFAULT_MIN_RR=2.0
-DEFAULT_DAILY_LOSS_LIMIT=2.0
-```
+Instead, the objective was to design a reliable AI system where deterministic business logic and language models complement each other.
 
-Passwords containing `@` must be URL-encoded (`@` → `%40`) inside `DATABASE_URL` / `ALEMBIC_DATABASE_URL`.
+Several engineering principles guided the implementation.
 
----
+## AI should assist, not control.
 
-## Tests
+Business rules remain deterministic.
 
-```bash
-cd crypto-discipline-bot
-pip install -r requirements.txt
-pytest -q
-```
-
-Covers position-size math, R:R, all eight blocking rules, AI vetoes, decision-engine combinations.
+LLMs provide reasoning rather than authority.
 
 ---
 
-## Architecture & Design Decisions
+## Simplicity over complexity.
 
-Read [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for a short ADR-style write-up of the main technical decisions: why two AI tiers, why Ollama-first, why two FastAPI services, why async SQLAlchemy, etc.
+Each service has a clearly defined responsibility.
 
-## Roadmap
-
-What's already in: discipline engine, two-tier AI, signal scanner, web/PWA, voice input, calendar heatmap, achievements, weekly review, daily reminders, morning check-in.
-
-What's next:
-- Public deployment guide (Hetzner / Fly.io)
-- JWT authentication on the FastAPI surface
-- Rate limiting + Sentry
-- TradingView webhook → discipline check
-- Trade screenshot OCR via vision LLM
-- Subscription tiers (Free / Pro / Team)
-- English UI localisation
+The architecture favors maintainability over unnecessary abstraction.
 
 ---
 
-## License
+## Provider independence.
 
-MIT. See `LICENSE`.
+No business logic depends on a specific AI vendor.
+
+Cloud and local inference are interchangeable.
 
 ---
 
-## Disclaimer
+## Production-first thinking.
 
-This software is provided for educational and personal-discipline purposes only. It does not provide financial advice, does not execute trades, and does not predict markets. The author is not liable for any losses resulting from its use. Trading cryptocurrency involves substantial risk.
+Every architectural decision considers:
+
+- maintainability
+- scalability
+- testing
+- deployment
+- long-term evolution
+
+- ---
+
+# Lessons Learned
+
+Building this project reinforced several important engineering principles.
+
+- LLMs should complement deterministic systems rather than replace them.
+- Modular architectures simplify long-term development.
+- AI provider abstraction greatly improves flexibility.
+- Local AI is becoming increasingly practical for production workloads.
+- Separating business logic from AI significantly improves reliability.
+- Good developer experience accelerates future development more than clever code.
+
+- ---
+
+# About the Author
+
+Hi, I'm **Raian Bagautdinov**.
+
+I'm an Applied AI Engineer focused on designing production-ready AI systems using FastAPI, PostgreSQL, LLMs, RAG and local AI.
+
+My primary interest is building AI applications that combine deterministic software engineering with modern language models to create reliable and maintainable systems.
+
+I enjoy designing architectures where AI enhances decision-making without becoming the source of truth.
