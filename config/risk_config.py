@@ -1,12 +1,12 @@
-"""Параметры управления риском для РАСЧЁТА сигналов (не для торговли).
-Используются, чтобы в уведомлении предложить разумный стоп-лосс и тейк-профит."""
+"""Risk-management parameters for COMPUTING signals (not for trading).
+Used to suggest a reasonable stop-loss and take-profit in the notification."""
 from dataclasses import dataclass
 
 
 @dataclass
 class RiskLimits:
-    # Минимально приемлемое соотношение риск/прибыль. Сигналы ниже — отбрасываются.
+    # Minimum acceptable risk/reward ratio. Signals below it are discarded.
     min_risk_reward: float = 1.5
 
-    # Порог консенсуса индикаторов, при котором сигнал считается сильным.
+    # Indicator consensus threshold at which a signal is considered strong.
     strong_signal_threshold: float = 75.0

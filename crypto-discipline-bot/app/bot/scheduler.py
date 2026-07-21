@@ -26,8 +26,8 @@ WEEKLY_REVIEW_HOUR = 18
 async def _send_morning_checkin(bot: Bot) -> None:
     sent = 0
     text = (
-        "🌅 Доброе утро! Какой план на сегодня?\n\n"
-        "Выбор фиксируется в твоём журнале. Вечером сравним с реальностью."
+        "🌅 Good morning! What's the plan for today?\n\n"
+        "Your choice is logged in your journal. In the evening we'll compare it with reality."
     )
     async with AsyncSessionLocal() as session:
         users = await reminders.list_users(session)
@@ -62,17 +62,17 @@ async def _send_daily_reminders(bot: Bot) -> None:
 
                 if plan is not None:
                     plan_label = daily_plan_service.INTENT_LABELS[plan.intent]
-                    msg = f"📋 План на сегодня: {plan_label}\n"
-                    msg += f"   Реальность: {today_attempts} проверок"
+                    msg = f"📋 Today's plan: {plan_label}\n"
+                    msg += f"   Reality: {today_attempts} checks"
                     if plan.intent == "watch" and today_attempts > 0:
-                        msg += "\n   ⚠️ Планировал не торговать — но было " \
-                            f"{today_attempts} попытк(а/и)."
+                        msg += "\n   ⚠️ You planned not to trade — but made " \
+                            f"{today_attempts} attempt(s)."
                     elif plan.intent == "few" and today_attempts > 3:
-                        msg += "\n   ⚠️ План был ≤3 — превышение."
+                        msg += "\n   ⚠️ The plan was ≤3 — exceeded."
                     elif plan.intent == "off" and today_attempts > 0:
-                        msg += "\n   ⚠️ Планировал выходной — а торговал."
+                        msg += "\n   ⚠️ You planned a day off — but traded."
                     elif today_attempts <= 3:
-                        msg += "\n   ✅ Следуешь плану."
+                        msg += "\n   ✅ You're sticking to the plan."
                     blocks.append(msg)
 
                 if pending:
@@ -95,18 +95,18 @@ async def _send_daily_reminders(bot: Bot) -> None:
 async def _build_review_text(client: OllamaClient | None, payload: dict) -> str:
     totals = payload["totals"]
     header = (
-        "📊 Еженедельный обзор\n"
-        f"За 7 дней: {totals['total_checks']} проверок, "
+        "📊 Weekly review\n"
+        f"Last 7 days: {totals['total_checks']} checks, "
         f"{totals['allowed']} ALLOWED, {totals['forbidden']} FORBIDDEN.\n"
-        f"Закрытых: {totals['closed']}  •  Win-rate: {totals['win_rate_pct']}%  "
+        f"Closed: {totals['closed']}  •  Win-rate: {totals['win_rate_pct']}%  "
         f"•  P&L: {totals['total_pnl_percent']:+.2f}%\n"
     )
     if not client:
-        return header + "\n💡 Подключи Ollama в .env, чтобы получать AI-инсайты."
+        return header + "\n💡 Configure Ollama in .env to get AI insights."
     if totals["closed"] < 3:
         return header + (
-            "\n💡 Закрытых сделок мало (<3) — для AI-выводов не хватит данных. "
-            "Закрой сделки командой /close."
+            "\n💡 Too few closed trades (<3) — not enough data for AI conclusions. "
+            "Close trades with /close."
         )
 
     try:
@@ -117,7 +117,7 @@ async def _build_review_text(client: OllamaClient | None, payload: dict) -> str:
         )
     except Exception as exc:
         logger.warning("weekly review LLM call failed: %s", exc)
-        return header + f"\n⚠️ AI-обзор временно недоступен ({exc.__class__.__name__})."
+        return header + f"\n⚠️ AI review is temporarily unavailable ({exc.__class__.__name__})."
 
     summary = str(data.get("summary", "")).strip()
     patterns = [str(p) for p in (data.get("patterns") or [])][:3]
@@ -128,15 +128,15 @@ async def _build_review_text(client: OllamaClient | None, payload: dict) -> str:
     if summary:
         body.append("🎯 " + summary)
     if patterns:
-        body.append("\n🔎 Паттерны:")
+        body.append("\n🔎 Patterns:")
         for i, p in enumerate(patterns, 1):
             body.append(f"  {i}. {p}")
     if rec:
-        body.append(f"\n💡 Рекомендация: {rec}")
+        body.append(f"\n💡 Recommendation: {rec}")
     if good:
-        body.append(f"\n✅ Что хорошо: {good}")
+        body.append(f"\n✅ What went well: {good}")
     body.append(
-        "\n⚠️ Это не финансовая рекомендация. Я опираюсь только на твой журнал."
+        "\n⚠️ This is not financial advice. I rely only on your journal."
     )
     return "\n".join(body)
 
@@ -206,7 +206,7 @@ async def scheduler_loop(bot: Bot) -> None:
 async def manual_morning_checkin(bot: Bot, telegram_id: int) -> None:
     await bot.send_message(
         chat_id=telegram_id,
-        text="🌅 Какой план на сегодня?\n\nВыбери — вечером сравним с реальностью.",
+        text="🌅 What's the plan for today?\n\nPick one — in the evening we'll compare it with reality.",
         reply_markup=morning_plan_kb(),
     )
 
@@ -219,10 +219,10 @@ async def manual_remind(bot: Bot, telegram_id: int) -> str:
             )
         ).scalar_one_or_none()
         if user is None:
-            return "Сначала отправь /start чтобы зарегистрироваться."
+            return "Send /start first to register."
         pending = await reminders.pending_trades(session, user, older_than_minutes=0)
     if not pending:
-        return "🎉 Все сделки закрыты — журнал актуален."
+        return "🎉 All trades are closed — the journal is up to date."
     return reminders.format_pending(pending)
 
 
@@ -234,10 +234,10 @@ async def manual_review(bot: Bot, telegram_id: int) -> str:
             )
         ).scalar_one_or_none()
         if user is None:
-            return "Сначала отправь /start чтобы зарегистрироваться."
+            return "Send /start first to register."
         trades = await reminders.trades_in_last_days(session, user, days=7)
     if not trades:
-        return "За последнюю неделю сделок нет."
+        return "No trades in the last week."
     payload = reminders.build_weekly_payload(trades)
     client = (
         OllamaClient(cfg.ollama_base_url, cfg.ollama_model_coach)

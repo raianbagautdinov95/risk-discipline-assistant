@@ -5,7 +5,7 @@
     "display": "standalone",
     "background_color": "#0E1018",
     "theme_color": "#7B7BFF",
-    "description": "Risk officer и discipline coach для крипто-трейдера. Не финансовая рекомендация.",
+    "description": "Risk officer and discipline coach for crypto traders. Not financial advice.",
     "orientation": "any",
     "prefer_related_applications": false,
     "categories": ["finance", "productivity"],

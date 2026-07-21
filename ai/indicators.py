@@ -1,5 +1,5 @@
-"""Технические индикаторы и анализ структуры рынка.
-Использует библиотеку ta (pure-python, без C-зависимостей)."""
+"""Technical indicators and market structure analysis.
+Uses the ta library (pure-python, no C dependencies)."""
 from typing import Dict, Any, Optional
 import pandas as pd
 import numpy as np
@@ -17,9 +17,9 @@ from ai.patterns import (
 
 
 def compute_indicators(df: pd.DataFrame, atr_period: int = 14) -> pd.DataFrame:
-    """Добавляет в DataFrame колонки с индикаторами. Возвращает новый DataFrame."""
+    """Adds indicator columns to the DataFrame. Returns a new DataFrame."""
     if df is None or len(df) < 50:
-        raise ValueError("Нужно минимум 50 свечей для корректного расчёта индикаторов")
+        raise ValueError("At least 50 candles are needed for a correct indicator calculation")
 
     out = df.copy()
     close = out["close"]
@@ -27,14 +27,14 @@ def compute_indicators(df: pd.DataFrame, atr_period: int = 14) -> pd.DataFrame:
     low = out["low"]
     volume = out["volume"]
 
-    # --- Моментум ---
+    # --- Momentum ---
     out["rsi"] = RSIIndicator(close=close, window=14).rsi()
 
     stoch = StochasticOscillator(high=high, low=low, close=close, window=14, smooth_window=3)
     out["stoch_k"] = stoch.stoch()
     out["stoch_d"] = stoch.stoch_signal()
 
-    # --- Тренд ---
+    # --- Trend ---
     macd = MACD(close=close, window_slow=26, window_fast=12, window_sign=9)
     out["macd"] = macd.macd()
     out["macd_signal"] = macd.macd_signal()
@@ -49,7 +49,7 @@ def compute_indicators(df: pd.DataFrame, atr_period: int = 14) -> pd.DataFrame:
     out["di_plus"] = adx.adx_pos()
     out["di_minus"] = adx.adx_neg()
 
-    # --- Волатильность ---
+    # --- Volatility ---
     bb = BollingerBands(close=close, window=20, window_dev=2)
     out["bb_upper"] = bb.bollinger_hband()
     out["bb_lower"] = bb.bollinger_lband()
@@ -59,25 +59,25 @@ def compute_indicators(df: pd.DataFrame, atr_period: int = 14) -> pd.DataFrame:
     atr = AverageTrueRange(high=high, low=low, close=close, window=atr_period)
     out["atr"] = atr.average_true_range()
 
-    # --- Объём ---
+    # --- Volume ---
     out["obv"] = OnBalanceVolumeIndicator(close=close, volume=volume).on_balance_volume()
     out["volume_ma_20"] = volume.rolling(window=20).mean()
-    out["volume_spike"] = volume / out["volume_ma_20"]  # >1.5 = аномально высокий объём
+    out["volume_spike"] = volume / out["volume_ma_20"]  # >1.5 = abnormally high volume
 
     return out
 
 
 def detect_trend(df: pd.DataFrame) -> str:
-    """Определяет направление тренда по EMA и ADX.
-    Возвращает: 'UP', 'DOWN' или 'SIDEWAYS'.
+    """Determines the trend direction from EMA and ADX.
+    Returns: 'UP', 'DOWN' or 'SIDEWAYS'.
     """
     last = df.iloc[-1]
 
-    # Слабый тренд, если ADX < 20.
+    # Weak trend if ADX < 20.
     if pd.isna(last["adx"]) or last["adx"] < 20:
         return "SIDEWAYS"
 
-    # Восходящий: цена выше EMA50, EMA20 > EMA50, DI+ > DI-
+    # Uptrend: price above EMA50, EMA20 > EMA50, DI+ > DI-
     if last["close"] > last["ema_50"] and last["ema_20"] > last["ema_50"] and last["di_plus"] > last["di_minus"]:
         return "UP"
     if last["close"] < last["ema_50"] and last["ema_20"] < last["ema_50"] and last["di_minus"] > last["di_plus"]:
@@ -86,7 +86,7 @@ def detect_trend(df: pd.DataFrame) -> str:
 
 
 def find_support_resistance(df: pd.DataFrame, lookback: int = 50) -> Dict[str, float]:
-    """Простой поиск ближайшей поддержки/сопротивления по локальным экстремумам."""
+    """Simple search for the nearest support/resistance from local extrema."""
     recent = df.tail(lookback)
     support = float(recent["low"].min())
     resistance = float(recent["high"].max())
@@ -94,12 +94,12 @@ def find_support_resistance(df: pd.DataFrame, lookback: int = 50) -> Dict[str, f
 
 
 def indicator_snapshot(df: pd.DataFrame) -> Dict[str, Any]:
-    """Свёртка последней свечи в удобный dict для передачи в движок сигналов и в AI."""
+    """Collapses the last candle into a convenient dict to pass to the signal engine and to the AI."""
     last = df.iloc[-1]
     prev = df.iloc[-2] if len(df) > 1 else last
     sr = find_support_resistance(df, lookback=50)
 
-    # Продвинутые паттерны.
+    # Advanced patterns.
     rsi_div = detect_divergence(df, indicator="rsi", lookback=50)
     macd_div = detect_divergence(df, indicator="macd_diff", lookback=50)
     candle = detect_candle_pattern(df)
@@ -110,7 +110,7 @@ def indicator_snapshot(df: pd.DataFrame) -> Dict[str, Any]:
     at_level = is_at_key_level(price, sr["support"], sr["resistance"], atr_val)
 
     return {
-        # Timestamp последней свечи (секунды). Нужен для cooldown в движке сигналов.
+        # Timestamp of the last candle (seconds). Needed for cooldown in the signal engine.
         "timestamp": int(last["timestamp"]) // 1000 if "timestamp" in df.columns else None,
         "price": float(last["close"]),
         "open": float(last["open"]),
@@ -146,10 +146,10 @@ def indicator_snapshot(df: pd.DataFrame) -> Dict[str, Any]:
         "support": sr["support"],
         "resistance": sr["resistance"],
 
-        # Продвинутые паттерны.
+        # Advanced patterns.
         "rsi_divergence": rsi_div,       # 'BULLISH' | 'BEARISH' | None
         "macd_divergence": macd_div,     # 'BULLISH' | 'BEARISH' | None
-        "candle_pattern": candle,        # например 'BULLISH_ENGULFING' или None
-        "bollinger_squeeze": squeeze,    # True/False — готовность к импульсу
+        "candle_pattern": candle,        # e.g. 'BULLISH_ENGULFING' or None
+        "bollinger_squeeze": squeeze,    # True/False — readiness for an impulse
         "at_key_level": at_level,        # 'SUPPORT' | 'RESISTANCE' | None
     }

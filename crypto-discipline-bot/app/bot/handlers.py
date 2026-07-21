@@ -47,7 +47,7 @@ from app.services.signal_client import SignalClient
 logger = logging.getLogger(__name__)
 router = Router()
 
-SKIP_TOKENS = {"пропустить", "skip", "-", "—"}
+SKIP_TOKENS = {"skip", "-", "—"}
 
 
 # ---------------------------------------------------------------------------
@@ -77,41 +77,41 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
     if is_new_user:
         await state.set_state(Onboarding.deposit)
         await message.answer(
-            "👋 Привет! Я — твой Risk Officer для крипто-трейдинга.\n\n"
-            "Я не торгую и не даю советов — я проверяю каждую твою сделку "
-            "по 8 правилам риск-менеджмента и блокирую опасные.\n\n"
-            "Настроим тебя за 1 минуту. Шаг 1/3:\n"
-            "Какой у тебя торговый депозит, USDT?\n"
-            "(пиши число, например: 1000)",
+            "👋 Hi! I'm your Risk Officer for crypto trading.\n\n"
+            "I don't trade and I don't give advice — I check every trade "
+            "against 8 risk-management rules and block the dangerous ones.\n\n"
+            "Let's set you up in 1 minute. Step 1/3:\n"
+            "What's your trading deposit, USDT?\n"
+            "(type a number, e.g.: 1000)",
             reply_markup=onboarding_skip_kb(),
         )
         return
 
     await message.answer(
-        "Привет! Я — твой Risk & Discipline Assistant.\n\n"
-        "Я помогу проверить дисциплину и риск ПЕРЕД сделкой.\n"
-        "Я не даю финансовых советов и не обещаю прибыль.\n\n"
-        "Команды дисциплины:\n"
-        "/trade — проверить сделку\n"
-        "/journal — последние сделки\n"
-        "/stats — статистика (включая win-rate)\n"
-        "/close 12 win 2.5 — закрыть сделку с результатом\n"
-        "/calc 1000 1 67500 66800 — калькулятор позиции\n"
-        "/export — выгрузить журнал в CSV\n"
-        "/remind — показать незакрытые сделки\n"
-        "/review — AI-обзор за неделю (Ollama)\n"
-        "/plan — указать план на сегодня\n"
-        "/rules — правила риска\n"
-        "/settings — настройки\n\n"
-        "🎙 Можно голосом! Запиши: \"BTC long 67500 стоп 66800 тейк 69200\".\n\n"
-        "Команды сканера рынка:\n"
-        "/scan — полный скан рынка\n"
-        "/signals — активные сигналы\n"
-        "/analyze BTC-USDT — анализ пары\n\n"
-        "/help — помощь\n\n"
-        "🔔 Каждый день в 22:00 UTC напомню про незакрытые сделки.\n"
-        "📊 Каждое воскресенье в 18:00 UTC пришлю AI-обзор недели.\n"
-        "👇 Используй кнопки внизу — это быстрее.",
+        "Hi! I'm your Risk & Discipline Assistant.\n\n"
+        "I help you check discipline and risk BEFORE a trade.\n"
+        "I don't give financial advice and I don't promise profit.\n\n"
+        "Discipline commands:\n"
+        "/trade — check a trade\n"
+        "/journal — recent trades\n"
+        "/stats — statistics (incl. win-rate)\n"
+        "/close 12 win 2.5 — close a trade with its outcome\n"
+        "/calc 1000 1 67500 66800 — position calculator\n"
+        "/export — export journal to CSV\n"
+        "/remind — show open trades\n"
+        "/review — weekly AI review (Ollama)\n"
+        "/plan — set today's plan\n"
+        "/rules — risk rules\n"
+        "/settings — settings\n\n"
+        "🎙 Voice works too! Record: \"BTC long 67500 stop 66800 take 69200\".\n\n"
+        "Market scanner commands:\n"
+        "/scan — full market scan\n"
+        "/signals — active signals\n"
+        "/analyze BTC-USDT — analyze a pair\n\n"
+        "/help — help\n\n"
+        "🔔 Every day at 22:00 UTC I'll remind you about open trades.\n"
+        "📊 Every Sunday at 18:00 UTC I'll send a weekly AI review.\n"
+        "👇 Use the buttons below — it's faster.",
         reply_markup=main_menu_kb(),
     )
 
@@ -164,10 +164,10 @@ async def btn_help(message: Message) -> None:
 @router.message(Command("help"))
 async def cmd_help(message: Message) -> None:
     await message.answer(
-        "Я задам тебе вопросы о сделке (пара, вход, SL, TP, депо, риск, плечо, "
-        "причина, сетап, эмоции). На основе расчётов + двух AI-моделей выдам "
-        "вердикт: РАЗРЕШЕНО / ЗАПРЕЩЕНО / ЖДАТЬ.\n\n"
-        "⚠️ Это не финансовая рекомендация."
+        "I'll ask you questions about the trade (pair, entry, SL, TP, deposit, "
+        "risk, leverage, reason, setup, emotions). Based on the math + two AI "
+        "models I'll give a verdict: ALLOWED / FORBIDDEN / WAIT.\n\n"
+        "⚠️ This is not financial advice."
     )
 
 
@@ -200,7 +200,7 @@ def _format_signal(s: dict) -> str:
     if isinstance(conf, (int, float)):
         # Bot gives confidence in 0..100; render as %.
         pct = conf if conf > 1 else conf * 100
-        lines.append(f"  confidence: {round(pct)}%   тренд 1H: {trend}")
+        lines.append(f"  confidence: {round(pct)}%   1H trend: {trend}")
     if reasons:
         joined = " · ".join(str(r) for r in reasons[:3])
         lines.append(f"  • {joined}")
@@ -220,7 +220,7 @@ async def _render_signal(message: Message, s: dict) -> None:
 @router.message(Command("scan"))
 async def cmd_scan(message: Message) -> None:
     await message.answer(
-        "⏳ Сканирую рынок, это занимает 10-30 секунд…",
+        "⏳ Scanning the market, this takes 10-30 seconds…",
         reply_markup=main_menu_kb(),
     )
     try:
@@ -228,19 +228,19 @@ async def cmd_scan(message: Message) -> None:
     except Exception as exc:
         logger.warning("scan failed: %s", exc)
         await message.answer(
-            f"⚠️ Не удалось обратиться к сигнал-боту.\n"
-            f"Убедись что он запущен (uvicorn api:app --port 8765).\n"
-            f"Ошибка: {exc.__class__.__name__}"
+            f"⚠️ Could not reach the signal bot.\n"
+            f"Make sure it is running (uvicorn api:app --port 8765).\n"
+            f"Error: {exc.__class__.__name__}"
         )
         return
     if not signals:
         await message.answer(
-            "Скан завершён. Активных сигналов сейчас нет — рынок спокойный "
-            "или фильтры строгие.\n\n"
-            "Можешь использовать /analyze SYMBOL чтобы посмотреть конкретную пару."
+            "Scan finished. No active signals right now — the market is quiet "
+            "or the filters are strict.\n\n"
+            "You can use /analyze SYMBOL to look at a specific pair."
         )
         return
-    await message.answer(f"📡 Найдено сигналов: {len(signals)}")
+    await message.answer(f"📡 Signals found: {len(signals)}")
     for s in signals:
         await _render_signal(message, s)
 
@@ -252,17 +252,17 @@ async def cmd_signals(message: Message) -> None:
     except Exception as exc:
         logger.warning("get_active failed: %s", exc)
         await message.answer(
-            f"⚠️ Сигнал-бот недоступен.\n"
-            f"Ошибка: {exc.__class__.__name__}"
+            f"⚠️ Signal bot is unavailable.\n"
+            f"Error: {exc.__class__.__name__}"
         )
         return
     if not signals:
         await message.answer(
-            "Активных сигналов сейчас нет.\nЗапусти полный скан: /scan",
+            "No active signals right now.\nRun a full scan: /scan",
             reply_markup=main_menu_kb(),
         )
         return
-    await message.answer(f"📡 Активных сигналов: {len(signals)}")
+    await message.answer(f"📡 Active signals: {len(signals)}")
     for s in signals:
         await _render_signal(message, s)
 
@@ -272,21 +272,21 @@ async def cmd_analyze(message: Message) -> None:
     parts = (message.text or "").split(maxsplit=1)
     if len(parts) < 2 or not parts[1].strip():
         await message.answer(
-            "Укажи пару, например:\n"
+            "Specify a pair, for example:\n"
             "/analyze BTC-USDT\n"
             "/analyze ETH-USDT"
         )
         return
     symbol = parts[1].strip().upper()
-    await message.answer(f"⏳ Анализирую {symbol}…")
+    await message.answer(f"⏳ Analyzing {symbol}…")
     try:
         s = await _signal_client().analyze(symbol)
     except Exception as exc:
         logger.warning("analyze %s failed: %s", symbol, exc)
         await message.answer(
-            f"⚠️ Не удалось проанализировать {symbol}.\n"
-            f"Проверь, что пара есть в списке (BTC-USDT, ETH-USDT и т.д.).\n"
-            f"Ошибка: {exc.__class__.__name__}"
+            f"⚠️ Could not analyze {symbol}.\n"
+            f"Check that the pair is on the list (BTC-USDT, ETH-USDT, etc.).\n"
+            f"Error: {exc.__class__.__name__}"
         )
         return
     await _render_signal(message, s)
@@ -300,7 +300,7 @@ async def cb_signal_to_trade(callback: CallbackQuery, state: FSMContext) -> None
     symbol = callback.data.split(":", 1)[1] if callback.data else ""
     await callback.answer()
     if not symbol:
-        await callback.message.answer("⚠️ Не понял какую пару проверять.")
+        await callback.message.answer("⚠️ Couldn't tell which pair to check.")
         return
 
     # Fetch fresh signal data from the signal-bot (the cached result may be stale).
@@ -309,14 +309,14 @@ async def cb_signal_to_trade(callback: CallbackQuery, state: FSMContext) -> None
     except Exception as exc:
         logger.warning("signal_to_trade fetch %s failed: %s", symbol, exc)
         await callback.message.answer(
-            f"⚠️ Не удалось получить данные сигнала.\nОшибка: {exc.__class__.__name__}"
+            f"⚠️ Could not fetch the signal data.\nError: {exc.__class__.__name__}"
         )
         return
 
     action = (s.get("action") or "HOLD").upper()
     if action not in ("BUY", "SELL"):
         await callback.message.answer(
-            "По этой паре сейчас HOLD — сигнала нет. Лучше пропустить."
+            "This pair is currently HOLD — no signal. Better to skip it."
         )
         return
 
@@ -334,14 +334,14 @@ async def cb_signal_to_trade(callback: CallbackQuery, state: FSMContext) -> None
     await state.set_state(TradeCheck.deposit)
 
     await callback.message.answer(
-        f"✅ Подставил данные сигнала:\n"
-        f"  Пара: {pair}\n"
-        f"  Направление: {direction}\n"
-        f"  Вход: {s.get('entry')}\n"
+        f"✅ Prefilled the signal data:\n"
+        f"  Pair: {pair}\n"
+        f"  Direction: {direction}\n"
+        f"  Entry: {s.get('entry')}\n"
         f"  SL: {s.get('stop_loss')}\n"
         f"  TP: {s.get('take_profit')}\n\n"
-        f"Теперь пара коротких вопросов.\n"
-        f"1/8. Депозит, USDT?",
+        f"Now a few quick questions.\n"
+        f"1/8. Deposit, USDT?",
         reply_markup=ReplyKeyboardRemove(),
     )
 
@@ -351,17 +351,17 @@ async def cb_signal_to_trade(callback: CallbackQuery, state: FSMContext) -> None
 @router.message(Command("rules"))
 async def cmd_rules(message: Message) -> None:
     await message.answer(
-        "🛡️ Жёсткие правила риска (по умолчанию):\n"
-        f"• Максимальный риск: {cfg.default_max_risk_percent}% на сделку\n"
-        f"• Максимальное плечо: x{cfg.default_max_leverage}\n"
-        f"• Минимальный R:R: 1:{cfg.default_min_rr}\n"
-        f"• Дневной лимит убытка: -{cfg.default_daily_loss_limit}%\n\n"
-        "Сделка БЛОКИРУЕТСЯ если:\n"
-        "• нет stop-loss\n"
-        "• 2 убыточные сделки подряд\n"
-        "• в эмоциях: злость / паника / жадность / FOMO\n"
-        "• желание отыграться (revenge trading)\n\n"
-        "Свои лимиты можно настроить в /settings."
+        "🛡️ Hard risk rules (defaults):\n"
+        f"• Max risk: {cfg.default_max_risk_percent}% per trade\n"
+        f"• Max leverage: x{cfg.default_max_leverage}\n"
+        f"• Min R:R: 1:{cfg.default_min_rr}\n"
+        f"• Daily loss limit: -{cfg.default_daily_loss_limit}%\n\n"
+        "A trade is BLOCKED if:\n"
+        "• no stop-loss\n"
+        "• 2 losing trades in a row\n"
+        "• emotions: anger / panic / greed / FOMO\n"
+        "• trying to win losses back (revenge trading)\n\n"
+        "You can set your own limits in /settings."
     )
 
 
@@ -379,10 +379,10 @@ async def cmd_journal(message: Message) -> None:
         await session.commit()
 
     if not trades:
-        await message.answer("Журнал пуст. Запусти /trade, чтобы добавить первую запись.")
+        await message.answer("Journal is empty. Run /trade to add your first entry.")
         return
 
-    lines = ["📒 Последние сделки:\n"]
+    lines = ["📒 Recent trades:\n"]
     for t in trades:
         rr = f"{t.rr_ratio}" if t.rr_ratio else "—"
         outcome_icon = {
@@ -396,7 +396,7 @@ async def cmd_journal(message: Message) -> None:
             f"#{t.id} {outcome_icon} {t.pair} {t.direction} | {t.decision} | "
             f"R:R={rr}{pnl_str} | {t.created_at:%d.%m %H:%M}"
         )
-    lines.append("\n💡 Закрыть сделку: /close <id> win|loss|breakeven [pnl%]")
+    lines.append("\n💡 Close a trade: /close <id> win|loss|breakeven [pnl%]")
     await message.answer("\n".join(lines))
 
 
@@ -410,36 +410,36 @@ async def cmd_stats(message: Message) -> None:
         await session.commit()
 
     if s.total == 0:
-        await message.answer("Нет данных. Запусти /trade.")
+        await message.answer("No data yet. Run /trade.")
         return
 
     body = (
-        f"📊 Статистика дисциплины:\n"
-        f"Всего проверок: {s.total}\n"
-        f"  • РАЗРЕШЕНО: {s.allowed}\n"
-        f"  • ЗАПРЕЩЕНО: {s.forbidden}\n"
-        f"  • ЖДАТЬ: {s.wait}\n"
-        f"Средний R:R: {s.avg_rr}\n"
-        f"Средний риск: {s.avg_risk}%\n"
+        f"📊 Discipline statistics:\n"
+        f"Total checks: {s.total}\n"
+        f"  • ALLOWED: {s.allowed}\n"
+        f"  • FORBIDDEN: {s.forbidden}\n"
+        f"  • WAIT: {s.wait}\n"
+        f"Average R:R: {s.avg_rr}\n"
+        f"Average risk: {s.avg_risk}%\n"
     )
     if s.closed > 0:
         body += (
-            f"\n💰 Реальные результаты ({s.closed} закрытых):\n"
+            f"\n💰 Real results ({s.closed} closed):\n"
             f"  • WIN: {s.wins}\n"
             f"  • LOSS: {s.losses}\n"
             f"  • BREAKEVEN: {s.breakevens}\n"
             f"  • Win-rate: {s.win_rate_pct}%\n"
-            f"  • Средний P&L: {s.avg_pnl_percent:+.2f}%\n"
-            f"  • Суммарный P&L: {s.total_pnl_percent:+.2f}%\n"
+            f"  • Average P&L: {s.avg_pnl_percent:+.2f}%\n"
+            f"  • Total P&L: {s.total_pnl_percent:+.2f}%\n"
         )
     else:
         body += (
-            "\n💡 Чтобы увидеть реальный win-rate, закрывай сделки командой:\n"
+            "\n💡 To see your real win-rate, close trades with:\n"
             "/close <id> win|loss|breakeven [pnl%]\n"
-            "ID сделок — в /journal"
+            "Trade IDs are in /journal"
         )
     if s.common_forbid_reasons:
-        body += "\n\nЧастые причины запрета:\n" + "\n".join(
+        body += "\n\nMost common block reasons:\n" + "\n".join(
             f"• {reason} ({count})" for reason, count in s.common_forbid_reasons
         )
     await message.answer(body)
@@ -459,12 +459,12 @@ async def cmd_settings(message: Message) -> None:
         await session.commit()
 
     await message.answer(
-        "⚙️ Текущие настройки:\n"
-        f"• Макс. риск: {s.max_risk_percent}%\n"
-        f"• Макс. плечо: x{s.max_leverage}\n"
-        f"• Мин. R:R: 1:{s.min_rr}\n"
-        f"• Дневной лимит: -{s.daily_loss_limit}%\n\n"
-        "Что изменить?",
+        "⚙️ Current settings:\n"
+        f"• Max risk: {s.max_risk_percent}%\n"
+        f"• Max leverage: x{s.max_leverage}\n"
+        f"• Min R:R: 1:{s.min_rr}\n"
+        f"• Daily limit: -{s.daily_loss_limit}%\n\n"
+        "What would you like to change?",
         reply_markup=settings_kb(),
     )
 
@@ -475,12 +475,12 @@ async def cb_settings_choose(callback: CallbackQuery, state: FSMContext) -> None
     await state.set_state(SettingsEdit.value)
     await state.update_data(field=field)
     label = {
-        "max_risk_percent": "максимальный риск, %",
-        "max_leverage": "максимальное плечо (число)",
-        "min_rr": "минимальный R:R (например 2)",
-        "daily_loss_limit": "дневной лимит убытка, %",
+        "max_risk_percent": "max risk, %",
+        "max_leverage": "max leverage (integer)",
+        "min_rr": "min R:R (e.g. 2)",
+        "daily_loss_limit": "daily loss limit, %",
     }[field]
-    await callback.message.answer(f"Введи новое значение: {label}")
+    await callback.message.answer(f"Enter the new value: {label}")
     await callback.answer()
 
 
@@ -495,7 +495,7 @@ async def settings_value(message: Message, state: FSMContext) -> None:
         else:
             value = float(raw)
     except ValueError:
-        await message.answer("Не понял число. Попробуй ещё раз или /settings.")
+        await message.answer("That doesn't look like a number. Try again or /settings.")
         return
 
     update = UserSettingsUpdate(**{field: value})
@@ -515,7 +515,7 @@ async def settings_value(message: Message, state: FSMContext) -> None:
         await session.commit()
 
     await state.clear()
-    await message.answer("✅ Сохранено. Посмотреть: /settings")
+    await message.answer("✅ Saved. View: /settings")
 
 
 # ---------------------------------------------------------------------------
@@ -527,8 +527,8 @@ async def cmd_trade(message: Message, state: FSMContext) -> None:
     await state.clear()
     await state.set_state(TradeCheck.pair)
     await message.answer(
-        "Проверим сделку. Я задам несколько вопросов.\n\n"
-        "1/13. Торговая пара? (пример: BTC/USDT)",
+        "Let's check a trade. I'll ask a few questions.\n\n"
+        "1/13. Trading pair? (example: BTC/USDT)",
         reply_markup=ReplyKeyboardRemove(),
     )
 
@@ -537,22 +537,22 @@ async def cmd_trade(message: Message, state: FSMContext) -> None:
 async def st_pair(message: Message, state: FSMContext) -> None:
     pair = (message.text or "").strip().upper()
     if "/" not in pair or len(pair) > 32:
-        await message.answer("Неверный формат. Пример: BTC/USDT.")
+        await message.answer("Invalid format. Example: BTC/USDT.")
         return
     await state.update_data(pair=pair)
     await state.set_state(TradeCheck.direction)
-    await message.answer("2/13. Направление?", reply_markup=direction_kb())
+    await message.answer("2/13. Direction?", reply_markup=direction_kb())
 
 
 @router.message(TradeCheck.direction)
 async def st_direction(message: Message, state: FSMContext) -> None:
     val = (message.text or "").strip().lower()
     if val not in {"long", "short"}:
-        await message.answer("Введи long или short.")
+        await message.answer("Type long or short.")
         return
     await state.update_data(direction=val)
     await state.set_state(TradeCheck.entry_price)
-    await message.answer("3/13. Цена входа?", reply_markup=ReplyKeyboardRemove())
+    await message.answer("3/13. Entry price?", reply_markup=ReplyKeyboardRemove())
 
 
 async def _read_float(message: Message) -> float | None:
@@ -567,12 +567,12 @@ async def _read_float(message: Message) -> float | None:
 async def st_entry(message: Message, state: FSMContext) -> None:
     val = await _read_float(message)
     if val is None or val <= 0:
-        await message.answer("Введи положительное число.")
+        await message.answer("Enter a positive number.")
         return
     await state.update_data(entry_price=val)
     await state.set_state(TradeCheck.stop_loss)
     await message.answer(
-        "4/13. Stop-loss? (введи число или 'пропустить' — это будет блокировать сделку)",
+        "4/13. Stop-loss? (enter a number or 'skip' — skipping will block the trade)",
         reply_markup=skip_kb(),
     )
 
@@ -585,11 +585,11 @@ async def st_sl(message: Message, state: FSMContext) -> None:
     else:
         val = await _read_float(message)
         if val is None or val <= 0:
-            await message.answer("Введи положительное число или 'пропустить'.")
+            await message.answer("Enter a positive number or 'skip'.")
             return
         await state.update_data(stop_loss=val)
     await state.set_state(TradeCheck.take_profit)
-    await message.answer("5/13. Take-profit? (число или 'пропустить')", reply_markup=skip_kb())
+    await message.answer("5/13. Take-profit? (number or 'skip')", reply_markup=skip_kb())
 
 
 @router.message(TradeCheck.take_profit)
@@ -600,33 +600,33 @@ async def st_tp(message: Message, state: FSMContext) -> None:
     else:
         val = await _read_float(message)
         if val is None or val <= 0:
-            await message.answer("Введи положительное число или 'пропустить'.")
+            await message.answer("Enter a positive number or 'skip'.")
             return
         await state.update_data(take_profit=val)
     await state.set_state(TradeCheck.deposit)
-    await message.answer("6/13. Депозит, USDT?", reply_markup=ReplyKeyboardRemove())
+    await message.answer("6/13. Deposit, USDT?", reply_markup=ReplyKeyboardRemove())
 
 
 @router.message(TradeCheck.deposit)
 async def st_deposit(message: Message, state: FSMContext) -> None:
     val = await _read_float(message)
     if val is None or val <= 0:
-        await message.answer("Введи положительное число.")
+        await message.answer("Enter a positive number.")
         return
     await state.update_data(deposit=val)
     await state.set_state(TradeCheck.risk_percent)
-    await message.answer("7/13. Риск на сделку, % (например 1)?")
+    await message.answer("7/13. Risk per trade, % (e.g. 1)?")
 
 
 @router.message(TradeCheck.risk_percent)
 async def st_risk(message: Message, state: FSMContext) -> None:
     val = await _read_float(message)
     if val is None or val <= 0:
-        await message.answer("Введи положительное число.")
+        await message.answer("Enter a positive number.")
         return
     await state.update_data(risk_percent=val)
     await state.set_state(TradeCheck.leverage)
-    await message.answer("8/13. Плечо? (1 = без плеча)")
+    await message.answer("8/13. Leverage? (1 = no leverage)")
 
 
 @router.message(TradeCheck.leverage)
@@ -637,25 +637,25 @@ async def st_leverage(message: Message, state: FSMContext) -> None:
         if val < 1:
             raise ValueError
     except ValueError:
-        await message.answer("Введи целое число >= 1.")
+        await message.answer("Enter an integer >= 1.")
         return
     await state.update_data(leverage=val)
     await state.set_state(TradeCheck.reason)
-    await message.answer("9/13. Причина входа? (одно предложение)")
+    await message.answer("9/13. Why are you entering? (one sentence)")
 
 
 @router.message(TradeCheck.reason)
 async def st_reason(message: Message, state: FSMContext) -> None:
     await state.update_data(reason=(message.text or "").strip())
     await state.set_state(TradeCheck.setup)
-    await message.answer("10/13. Сетап? (например: пробой, отскок, ретест)")
+    await message.answer("10/13. Setup? (e.g.: breakout, bounce, retest)")
 
 
 @router.message(TradeCheck.setup)
 async def st_setup(message: Message, state: FSMContext) -> None:
     await state.update_data(setup=(message.text or "").strip())
     await state.set_state(TradeCheck.emotion)
-    await message.answer("11/13. Эмоциональное состояние?", reply_markup=emotion_kb())
+    await message.answer("11/13. Emotional state?", reply_markup=emotion_kb())
 
 
 @router.message(TradeCheck.emotion)
@@ -663,7 +663,7 @@ async def st_emotion(message: Message, state: FSMContext) -> None:
     await state.update_data(emotion=(message.text or "").strip())
     await state.set_state(TradeCheck.losses_today)
     await message.answer(
-        "12/13. Дневной убыток сейчас, % (0 — если убытков сегодня нет)?",
+        "12/13. Current daily loss, % (0 — if no losses today)?",
         reply_markup=ReplyKeyboardRemove(),
     )
 
@@ -672,11 +672,11 @@ async def st_emotion(message: Message, state: FSMContext) -> None:
 async def st_losses_today(message: Message, state: FSMContext) -> None:
     val = await _read_float(message)
     if val is None or val < 0:
-        await message.answer("Введи число >= 0.")
+        await message.answer("Enter a number >= 0.")
         return
     await state.update_data(losses_today=val)
     await state.set_state(TradeCheck.consecutive_losses)
-    await message.answer("13/13. Сколько убыточных сделок подряд за сегодня?")
+    await message.answer("13/13. How many losing trades in a row today?")
 
 
 @router.message(TradeCheck.consecutive_losses)
@@ -687,12 +687,12 @@ async def st_consecutive_losses(message: Message, state: FSMContext) -> None:
         if val < 0:
             raise ValueError
     except ValueError:
-        await message.answer("Введи целое число >= 0.")
+        await message.answer("Enter an integer >= 0.")
         return
     data = await state.update_data(consecutive_losses=val)
     await state.clear()
 
-    await message.answer("Анализирую сделку, дай мне пару секунд...")
+    await message.answer("Analyzing the trade, give me a few seconds...")
 
     req = TradeRequest(
         pair=data["pair"],
@@ -740,15 +740,15 @@ async def st_consecutive_losses(message: Message, state: FSMContext) -> None:
 
     await message.answer(
         response.formatted_message + "\n\n"
-        f"💡 Сделка сохранена в журнале. После завершения закрой её:\n"
+        f"💡 The trade is saved in your journal. Close it once it's done:\n"
         f"   /close 47 win 2.5\n"
-        f"   ID сделок — в /journal",
+        f"   Trade IDs are in /journal",
         reply_markup=main_menu_kb(),
     )
 
 
 # ---------------------------------------------------------------------------
-# /close — отметить исход сделки
+# /close — record the trade outcome
 # ---------------------------------------------------------------------------
 
 @router.message(Command("close"))
@@ -762,31 +762,31 @@ async def cmd_close(message: Message) -> None:
     parts = (message.text or "").split()
     if len(parts) < 3:
         await message.answer(
-            "Формат:\n"
+            "Format:\n"
             "/close <id> <win|loss|breakeven|canceled> [pnl%]\n\n"
-            "Примеры:\n"
+            "Examples:\n"
             "/close 12 win 2.5\n"
             "/close 12 loss -1.0\n"
             "/close 12 breakeven\n\n"
-            "ID сделки можно посмотреть в /journal."
+            "Trade IDs are in /journal."
         )
         return
     try:
         trade_id = int(parts[1])
     except ValueError:
-        await message.answer("ID должен быть числом.")
+        await message.answer("ID must be a number.")
         return
     outcome_raw = parts[2].lower()
     outcome_map = {
         "win": "WIN", "won": "WIN", "w": "WIN",
         "loss": "LOSS", "lost": "LOSS", "l": "LOSS",
-        "breakeven": "BREAKEVEN", "be": "BREAKEVEN", "ноль": "BREAKEVEN",
-        "canceled": "CANCELED", "cancel": "CANCELED", "отмена": "CANCELED",
+        "breakeven": "BREAKEVEN", "be": "BREAKEVEN",
+        "canceled": "CANCELED", "cancel": "CANCELED",
     }
     outcome = outcome_map.get(outcome_raw)
     if outcome is None:
         await message.answer(
-            "Исход должен быть: win | loss | breakeven | canceled."
+            "Outcome must be: win | loss | breakeven | canceled."
         )
         return
     pnl = None
@@ -794,7 +794,7 @@ async def cmd_close(message: Message) -> None:
         try:
             pnl = float(parts[3].replace(",", ".").rstrip("%"))
         except ValueError:
-            await message.answer("P&L должен быть числом, например 2.5 или -1.3.")
+            await message.answer("P&L must be a number, e.g. 2.5 or -1.3.")
             return
 
     payload = CloseTradeRequest(outcome=outcome, pnl_percent=pnl)
@@ -809,7 +809,7 @@ async def cmd_close(message: Message) -> None:
         await session.commit()
 
     if trade is None:
-        await message.answer(f"Сделка #{trade_id} не найдена в твоём журнале.")
+        await message.answer(f"Trade #{trade_id} not found in your journal.")
         return
     label = {
         "WIN": "✅ WIN",
@@ -819,8 +819,8 @@ async def cmd_close(message: Message) -> None:
     }[outcome]
     pnl_str = f"  P&L: {pnl:+.2f}%" if pnl is not None else ""
     await message.answer(
-        f"Сделка #{trade_id} закрыта: {label}{pnl_str}\n"
-        f"/stats — посмотреть итоги"
+        f"Trade #{trade_id} closed: {label}{pnl_str}\n"
+        f"/stats — see the totals"
     )
     # Personal-record celebrations
     for ach in new_records:
@@ -831,7 +831,7 @@ async def cmd_close(message: Message) -> None:
 
 
 # ---------------------------------------------------------------------------
-# /calc — калькулятор позиции
+# /calc — position calculator
 # ---------------------------------------------------------------------------
 
 @router.message(Command("calc"))
@@ -845,11 +845,11 @@ async def cmd_calc(message: Message) -> None:
     parts = (message.text or "").split()
     if len(parts) < 5:
         await message.answer(
-            "Формат:\n"
-            "/calc <депозит> <риск%> <вход> <стоп> [плечо]\n\n"
-            "Пример:\n"
+            "Format:\n"
+            "/calc <deposit> <risk%> <entry> <stop> [leverage]\n\n"
+            "Example:\n"
             "/calc 1000 1 67500 66800 1\n\n"
-            "Бот посчитает: размер позиции, ст-ть позиции, маржу."
+            "The bot calculates: position size, position value, margin."
         )
         return
     try:
@@ -859,7 +859,7 @@ async def cmd_calc(message: Message) -> None:
         stop = float(parts[4])
         leverage = int(parts[5]) if len(parts) >= 6 else 1
     except ValueError:
-        await message.answer("Не понял числа. Все аргументы должны быть числами.")
+        await message.answer("Couldn't parse the numbers. All arguments must be numeric.")
         return
     try:
         result = calculate_position(PositionCalcRequest(
@@ -870,22 +870,22 @@ async def cmd_calc(message: Message) -> None:
             leverage=leverage,
         ))
     except ValueError as exc:
-        await message.answer(f"Ошибка: {exc}")
+        await message.answer(f"Error: {exc}")
         return
     await message.answer(
-        f"📐 Калькулятор позиции:\n\n"
-        f"• Риск в деньгах: {result.risk_money} USDT\n"
+        f"📐 Position calculator:\n\n"
+        f"• Risk in money: {result.risk_money} USDT\n"
         f"• SL distance: {result.sl_distance}\n"
-        f"• Размер позиции: {result.position_size_units} монет\n"
-        f"• Стоимость позиции: {result.position_value_usdt} USDT\n"
-        f"• Плечо: x{result.leverage}\n"
-        f"• Требуется маржа: {result.margin_required} USDT\n\n"
-        f"💡 Для R:R 1:2 ставь TP на расстоянии {result.rr_required_for_2x} от входа."
+        f"• Position size: {result.position_size_units} coins\n"
+        f"• Position value: {result.position_value_usdt} USDT\n"
+        f"• Leverage: x{result.leverage}\n"
+        f"• Margin required: {result.margin_required} USDT\n\n"
+        f"💡 For R:R 1:2 place your TP {result.rr_required_for_2x} away from entry."
     )
 
 
 # ---------------------------------------------------------------------------
-# /export — выгрузка журнала в CSV
+# /export — journal export to CSV
 # ---------------------------------------------------------------------------
 
 @router.message(Command("export"))
@@ -897,16 +897,16 @@ async def cmd_export(message: Message) -> None:
         data = await export_service.export_trades_csv(session, user)
         await session.commit()
     if not data or len(data) < 100:  # only header
-        await message.answer("Журнал пуст — нечего экспортировать.")
+        await message.answer("Journal is empty — nothing to export.")
         return
     await message.answer_document(
         BufferedInputFile(data, filename=f"trades_{message.from_user.id}.csv"),
-        caption="📊 Твой журнал сделок (открывается в Excel/Google Sheets)",
+        caption="📊 Your trade journal (opens in Excel/Google Sheets)",
     )
 
 
 # ---------------------------------------------------------------------------
-# /remind — показать незакрытые сделки прямо сейчас
+# /remind — show open trades right now
 # ---------------------------------------------------------------------------
 
 @router.message(Command("remind"))
@@ -916,20 +916,20 @@ async def cmd_remind(message: Message) -> None:
 
 
 # ---------------------------------------------------------------------------
-# /review — AI-обзор за последние 7 дней (Ollama, бесплатно)
+# /review — AI review of the last 7 days (Ollama, free)
 # ---------------------------------------------------------------------------
 
 @router.message(Command("review"))
 async def cmd_review(message: Message) -> None:
     await message.answer(
-        "🧠 Анализирую твой журнал за неделю… (10-30 сек)"
+        "🧠 Analyzing your journal for the week… (10-30 sec)"
     )
     text = await manual_review(message.bot, message.from_user.id)
     await message.answer(text, reply_markup=main_menu_kb())
 
 
 # ---------------------------------------------------------------------------
-# /plan — утренний чек-ин по требованию + callback от inline-кнопок
+# /plan — morning check-in on demand + inline-button callback
 # ---------------------------------------------------------------------------
 
 @router.message(Command("plan"))
@@ -941,7 +941,7 @@ async def cmd_plan(message: Message) -> None:
 async def cb_plan(callback: CallbackQuery) -> None:
     intent = callback.data.split(":", 1)[1] if callback.data else ""
     if not daily_plan_service.is_valid_intent(intent):
-        await callback.answer("Неизвестный план.")
+        await callback.answer("Unknown plan.")
         return
     label = daily_plan_service.INTENT_LABELS[intent]
     desc = daily_plan_service.INTENT_DESCRIPTIONS[intent]
@@ -955,11 +955,11 @@ async def cb_plan(callback: CallbackQuery) -> None:
         await daily_plan_service.upsert_plan(session, user, intent)
         await session.commit()
 
-    await callback.answer(f"План: {label}")
+    await callback.answer(f"Plan: {label}")
     await callback.message.answer(
-        f"✅ План на сегодня: {label}\n"
+        f"✅ Today's plan: {label}\n"
         f"  ({desc})\n\n"
-        f"Вечером проверю, насколько ты ему следовал. Хороших сделок!"
+        f"In the evening I'll check how well you followed it. Good trades!"
     )
 
 
@@ -973,29 +973,29 @@ async def cb_plan(callback: CallbackQuery) -> None:
 
 _STYLE_PRESETS = {
     "scalp": {"max_risk_percent": 0.5, "max_leverage": 5, "min_rr": 1.5,
-              "label": "⚡ Скальп — короткие сделки, низкий риск, частые попытки"},
+              "label": "⚡ Scalping — short trades, low risk, frequent attempts"},
     "intraday": {"max_risk_percent": 1.0, "max_leverage": 5, "min_rr": 2.0,
-                 "label": "📊 Интрадей — стандартные настройки"},
+                 "label": "📊 Intraday — standard settings"},
     "swing": {"max_risk_percent": 2.0, "max_leverage": 3, "min_rr": 3.0,
-              "label": "📈 Свинг — реже сделки, выше R:R"},
+              "label": "📈 Swing — fewer trades, higher R:R"},
     "any": {"max_risk_percent": 1.0, "max_leverage": 5, "min_rr": 2.0,
-            "label": "🤷 Стандарт — потом подстроим"},
+            "label": "🤷 Standard — we'll tune it later"},
 }
 
 
 @router.callback_query(F.data == "ob_skip")
 async def cb_onboarding_skip(callback: CallbackQuery, state: FSMContext) -> None:
     await state.clear()
-    await callback.answer("Пропустил")
+    await callback.answer("Skipped")
     await callback.message.answer(
-        "Окей, оставляю дефолтные лимиты (риск 1%, плечо x5, R:R 1:2).\n"
-        "Поменять — /settings.\n\n"
-        "Главные команды:\n"
-        "🛡 /trade — проверить сделку\n"
-        "📡 /scan — сигналы рынка\n"
-        "📒 /journal — твой журнал\n"
-        "📊 /stats — статистика\n"
-        "❓ /help — все команды",
+        "Okay, keeping the default limits (risk 1%, leverage x5, R:R 1:2).\n"
+        "Change them anytime — /settings.\n\n"
+        "Main commands:\n"
+        "🛡 /trade — check a trade\n"
+        "📡 /scan — market signals\n"
+        "📒 /journal — your journal\n"
+        "📊 /stats — statistics\n"
+        "❓ /help — all commands",
         reply_markup=main_menu_kb(),
     )
 
@@ -1008,14 +1008,14 @@ async def ob_deposit(message: Message, state: FSMContext) -> None:
         if deposit <= 0:
             raise ValueError
     except ValueError:
-        await message.answer("Введи число, например: 1000")
+        await message.answer("Type a number, e.g.: 1000")
         return
     await state.update_data(deposit=deposit)
     await state.set_state(Onboarding.style)
     await message.answer(
-        f"✅ Депозит: {deposit:.0f} USDT\n\n"
-        "Шаг 2/3: Какой у тебя стиль торговли?\n"
-        "(подберу лимиты под него)",
+        f"✅ Deposit: {deposit:.0f} USDT\n\n"
+        "Step 2/3: What's your trading style?\n"
+        "(I'll pick limits to match it)",
         reply_markup=onboarding_style_kb(),
     )
 
@@ -1024,7 +1024,7 @@ async def ob_deposit(message: Message, state: FSMContext) -> None:
 async def ob_style(callback: CallbackQuery, state: FSMContext) -> None:
     style = callback.data.split(":", 1)[1] if callback.data else ""
     if style not in _STYLE_PRESETS:
-        await callback.answer("Неизвестный стиль")
+        await callback.answer("Unknown style")
         return
     preset = _STYLE_PRESETS[style]
 
@@ -1039,22 +1039,22 @@ async def ob_style(callback: CallbackQuery, state: FSMContext) -> None:
         s.min_rr = preset["min_rr"]
         await session.commit()
 
-    await callback.answer("Лимиты подобраны")
+    await callback.answer("Limits selected")
     await state.clear()
     await callback.message.answer(
         f"✅ {preset['label']}\n\n"
-        f"Подобрал лимиты:\n"
-        f"  • Риск на сделку: {preset['max_risk_percent']}%\n"
-        f"  • Максимальное плечо: x{preset['max_leverage']}\n"
-        f"  • Минимальный R:R: 1:{preset['min_rr']}\n\n"
-        "Готово! 🎉\n\n"
-        "Главное действие — **/trade** перед каждой сделкой.\n\n"
-        "Дополнительно:\n"
-        "📡 /scan — сигналы рынка от сканера\n"
-        "📒 /journal — твой журнал\n"
-        "📊 /stats — win-rate и графики\n"
-        "🎙 Можно голосом — запиши \"BTC long 67500 стоп 66800\"\n\n"
-        "Хочешь сейчас попробовать на тестовой сделке? Нажми /trade",
+        f"I've set your limits:\n"
+        f"  • Risk per trade: {preset['max_risk_percent']}%\n"
+        f"  • Max leverage: x{preset['max_leverage']}\n"
+        f"  • Min R:R: 1:{preset['min_rr']}\n\n"
+        "All set! 🎉\n\n"
+        "The main action is **/trade** before every trade.\n\n"
+        "Also:\n"
+        "📡 /scan — market signals from the scanner\n"
+        "📒 /journal — your journal\n"
+        "📊 /stats — win-rate and charts\n"
+        "🎙 Voice works too — record \"BTC long 67500 stop 66800\"\n\n"
+        "Want to try it on a test trade right now? Tap /trade",
         reply_markup=main_menu_kb(),
     )
 
@@ -1069,12 +1069,12 @@ async def on_voice(message: Message, state: FSMContext) -> None:
     voice_svc = make_voice_service()
     if not voice_svc.transcription_available:
         await message.answer(
-            "🎙 Голосовой ввод требует OpenAI ключ для Whisper.\n"
-            "Сейчас он не настроен. Используй /trade с текстовыми ответами."
+            "🎙 Voice input requires an OpenAI key for Whisper.\n"
+            "It is not configured right now. Use /trade with text answers."
         )
         return
 
-    await message.answer("🎙 Распознаю голос…")
+    await message.answer("🎙 Transcribing your voice…")
 
     # Download voice file from Telegram
     try:
@@ -1083,7 +1083,7 @@ async def on_voice(message: Message, state: FSMContext) -> None:
         await message.bot.download_file(file.file_path, destination=buf)
         audio_bytes = buf.getvalue()
     except Exception as exc:
-        await message.answer(f"⚠️ Не удалось скачать аудио: {exc.__class__.__name__}")
+        await message.answer(f"⚠️ Could not download the audio: {exc.__class__.__name__}")
         return
 
     # Whisper
@@ -1091,21 +1091,21 @@ async def on_voice(message: Message, state: FSMContext) -> None:
         text = await voice_svc.transcribe(audio_bytes)
     except Exception as exc:
         await message.answer(
-            f"⚠️ Whisper не справился: {exc.__class__.__name__}\n"
-            "Попробуй ещё раз или используй /trade текстом."
+            f"⚠️ Whisper failed: {exc.__class__.__name__}\n"
+            "Try again or use /trade with text."
         )
         return
 
     if not text:
-        await message.answer("Голос пустой — ничего не распознано.")
+        await message.answer("The voice note is empty — nothing recognized.")
         return
 
     # Parse → dict
     parsed = await voice_svc.parse_trade(text)
     if not isinstance(parsed, dict) or parsed.get("error"):
         await message.answer(
-            f"📝 Распознал: {text}\n\n"
-            f"⚠️ Не понял параметры сделки. Запусти /trade и введи руками."
+            f"📝 Transcribed: {text}\n\n"
+            f"⚠️ Couldn't understand the trade parameters. Run /trade and enter them manually."
         )
         return
 
@@ -1117,9 +1117,9 @@ async def on_voice(message: Message, state: FSMContext) -> None:
 
     if not pair or "/" not in pair or direction not in ("long", "short") or entry is None:
         await message.answer(
-            f"📝 Распознал: {text}\n\n"
-            f"⚠️ В голосе не хватает обязательных полей "
-            "(пара, направление, цена входа). Используй /trade."
+            f"📝 Transcribed: {text}\n\n"
+            f"⚠️ The voice note is missing required fields "
+            "(pair, direction, entry price). Use /trade."
         )
         return
 
@@ -1135,13 +1135,13 @@ async def on_voice(message: Message, state: FSMContext) -> None:
     await state.set_state(TradeCheck.deposit)
 
     await message.answer(
-        f"📝 Распознал: {text}\n\n"
-        f"✅ Подставил параметры:\n"
-        f"  Пара: {pair}\n"
-        f"  Направление: {direction}\n"
-        f"  Вход: {entry}\n"
+        f"📝 Transcribed: {text}\n\n"
+        f"✅ Prefilled the parameters:\n"
+        f"  Pair: {pair}\n"
+        f"  Direction: {direction}\n"
+        f"  Entry: {entry}\n"
         f"  SL: {sl if sl is not None else '—'}\n"
         f"  TP: {tp if tp is not None else '—'}\n\n"
-        f"1/8. Депозит, USDT?",
+        f"1/8. Deposit, USDT?",
         reply_markup=ReplyKeyboardRemove(),
     )

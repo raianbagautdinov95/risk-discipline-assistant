@@ -54,20 +54,20 @@ async def trades_in_last_days(
 def format_pending(trades: list[Trade]) -> str:
     if not trades:
         return ""
-    lines = [f"🌙 Незакрытых сделок: {len(trades)}", ""]
+    lines = [f"🌙 Open trades: {len(trades)}", ""]
     for t in trades:
         age = datetime.now(timezone.utc) - t.created_at
         if age.days >= 1:
-            ago = f"{age.days} дн."
+            ago = f"{age.days}d"
         else:
-            ago = f"{age.seconds // 3600}ч {(age.seconds // 60) % 60}мин"
+            ago = f"{age.seconds // 3600}h {(age.seconds // 60) % 60}m"
         lines.append(
-            f"#{t.id}  {t.pair} {t.direction}  •  открыта {ago} назад"
+            f"#{t.id}  {t.pair} {t.direction}  •  opened {ago} ago"
         )
     lines.append("")
-    lines.append("Закрой их когда сделка отработала:")
+    lines.append("Close them once the trade has played out:")
     lines.append("/close <id> win|loss|breakeven [pnl%]")
-    lines.append("Пример: /close 47 win 2.5")
+    lines.append("Example: /close 47 win 2.5")
     return "\n".join(lines)
 
 
@@ -133,26 +133,27 @@ def build_weekly_payload(trades: list[Trade]) -> dict[str, Any]:
     }
 
 
-WEEKLY_REVIEW_SYSTEM_PROMPT = """Ты — трейдер-коуч, который анализирует журнал ученика за неделю.
-Тебе пришлют JSON со сводкой и образцом сделок.
+WEEKLY_REVIEW_SYSTEM_PROMPT = """You are a trading coach who reviews a student's weekly journal.
+You will receive JSON with a summary and a sample of trades.
+Always answer in English.
 
-Твоя задача — найти 1-2 КОНКРЕТНЫХ паттерна (с числами!) и дать 1 чёткую рекомендацию.
+Your task — find 1-2 SPECIFIC patterns (with numbers!) and give 1 clear recommendation.
 
-Запрещено:
-- обещать прибыль или результат
-- использовать слова "гарантия", "100%", "точно заработаешь"
-- общие фразы типа "соблюдай дисциплину" — нужны цифры
+Forbidden:
+- promising profit or a result
+- using the words "guarantee", "100%", "you will definitely earn"
+- generic phrases like "stay disciplined" — numbers are required
 
-Формат ответа СТРОГО JSON:
+Answer format, STRICTLY JSON:
 {
-  "summary": "1-2 предложения с главным выводом за неделю",
-  "patterns": ["конкретный паттерн 1 с цифрами", "конкретный паттерн 2"],
-  "recommendation": "1 чёткое действие на следующую неделю",
-  "good": "что было сделано хорошо за неделю"
+  "summary": "1-2 sentences with the main takeaway for the week",
+  "patterns": ["specific pattern 1 with numbers", "specific pattern 2"],
+  "recommendation": "1 clear action for next week",
+  "good": "what was done well this week"
 }
 
-Пример хорошего паттерна: "Все 3 LOSS — long на ETH утром (10-12 МСК), при этом win-rate longов ETH вечером 75%."
-Пример плохого паттерна: "У тебя проблемы с дисциплиной."
+Example of a good pattern: "All 3 LOSSes were ETH longs in the morning (10-12 UTC), while the evening ETH long win-rate is 75%."
+Example of a bad pattern: "You have discipline problems."
 
-Если данных мало (меньше 5 закрытых сделок) — честно скажи "недостаточно данных для выводов".
+If data is scarce (fewer than 5 closed trades) — honestly say "not enough data for conclusions".
 """

@@ -12,14 +12,14 @@ from aiogram.types import (
 # ---------------------------------------------------------------------------
 
 # Button labels (kept here so handlers can match them via F.text == BTN_X).
-BTN_SIGNALS = "📡 Сигналы"
-BTN_SCAN = "🔍 Скан рынка"
-BTN_TRADE = "🛡 Проверить сделку"
-BTN_JOURNAL = "📒 Журнал"
-BTN_STATS = "📊 Дисциплина"
-BTN_SETTINGS = "⚙️ Настройки"
-BTN_RULES = "📜 Правила"
-BTN_HELP = "❓ Помощь"
+BTN_SIGNALS = "📡 Signals"
+BTN_SCAN = "🔍 Market Scan"
+BTN_TRADE = "🛡 Check Trade"
+BTN_JOURNAL = "📒 Journal"
+BTN_STATS = "📊 Discipline"
+BTN_SETTINGS = "⚙️ Settings"
+BTN_RULES = "📜 Rules"
+BTN_HELP = "❓ Help"
 
 
 def main_menu_kb() -> ReplyKeyboardMarkup:
@@ -32,7 +32,7 @@ def main_menu_kb() -> ReplyKeyboardMarkup:
             [KeyboardButton(text=BTN_RULES), KeyboardButton(text=BTN_HELP)],
         ],
         resize_keyboard=True,
-        input_field_placeholder="Выбери команду или напиши...",
+        input_field_placeholder="Pick a command or type...",
     )
 
 
@@ -45,7 +45,7 @@ def trade_from_signal_kb(symbol: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[[
             InlineKeyboardButton(
-                text="🛡 Проверить дисциплину",
+                text="🛡 Check discipline",
                 callback_data=f"signal_to_trade:{symbol}",
             )
         ]]
@@ -55,12 +55,12 @@ def trade_from_signal_kb(symbol: str) -> InlineKeyboardMarkup:
 def onboarding_style_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [
-            InlineKeyboardButton(text="⚡ Скальп", callback_data="ob_style:scalp"),
-            InlineKeyboardButton(text="📊 Интрадей", callback_data="ob_style:intraday"),
+            InlineKeyboardButton(text="⚡ Scalping", callback_data="ob_style:scalp"),
+            InlineKeyboardButton(text="📊 Intraday", callback_data="ob_style:intraday"),
         ],
         [
-            InlineKeyboardButton(text="📈 Свинг", callback_data="ob_style:swing"),
-            InlineKeyboardButton(text="🤷 Не уверен", callback_data="ob_style:any"),
+            InlineKeyboardButton(text="📈 Swing", callback_data="ob_style:swing"),
+            InlineKeyboardButton(text="🤷 Not sure", callback_data="ob_style:any"),
         ],
     ])
 
@@ -68,7 +68,7 @@ def onboarding_style_kb() -> InlineKeyboardMarkup:
 def onboarding_skip_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(
-            text="⏭ Пропустить онбординг", callback_data="ob_skip")],
+            text="⏭ Skip onboarding", callback_data="ob_skip")],
     ])
 
 
@@ -77,15 +77,15 @@ def morning_plan_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [
             InlineKeyboardButton(
-                text="👀 Наблюдать", callback_data="plan:watch"),
+                text="👀 Watch only", callback_data="plan:watch"),
             InlineKeyboardButton(
-                text="📊 До 3 сделок", callback_data="plan:few"),
+                text="📊 Up to 3 trades", callback_data="plan:few"),
         ],
         [
             InlineKeyboardButton(
-                text="🔥 Активно искать", callback_data="plan:active"),
+                text="🔥 Actively hunt", callback_data="plan:active"),
             InlineKeyboardButton(
-                text="🛌 Не торгую", callback_data="plan:off"),
+                text="🛌 Day off", callback_data="plan:off"),
         ],
     ])
 
@@ -93,10 +93,10 @@ def morning_plan_kb() -> InlineKeyboardMarkup:
 def settings_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="Макс. риск, %", callback_data="set:max_risk_percent")],
-            [InlineKeyboardButton(text="Макс. плечо", callback_data="set:max_leverage")],
-            [InlineKeyboardButton(text="Мин. R:R", callback_data="set:min_rr")],
-            [InlineKeyboardButton(text="Дневной лимит, %", callback_data="set:daily_loss_limit")],
+            [InlineKeyboardButton(text="Max risk, %", callback_data="set:max_risk_percent")],
+            [InlineKeyboardButton(text="Max leverage", callback_data="set:max_leverage")],
+            [InlineKeyboardButton(text="Min R:R", callback_data="set:min_rr")],
+            [InlineKeyboardButton(text="Daily loss limit, %", callback_data="set:daily_loss_limit")],
         ]
     )
 
@@ -115,7 +115,7 @@ def direction_kb() -> ReplyKeyboardMarkup:
 
 def skip_kb() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text="пропустить")]],
+        keyboard=[[KeyboardButton(text="skip")]],
         resize_keyboard=True,
         one_time_keyboard=True,
     )
@@ -124,9 +124,9 @@ def skip_kb() -> ReplyKeyboardMarkup:
 def emotion_kb() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="спокоен"), KeyboardButton(text="уверен")],
-            [KeyboardButton(text="злость"), KeyboardButton(text="FOMO")],
-            [KeyboardButton(text="паника"), KeyboardButton(text="жадность")],
+            [KeyboardButton(text="calm"), KeyboardButton(text="confident")],
+            [KeyboardButton(text="anger"), KeyboardButton(text="FOMO")],
+            [KeyboardButton(text="panic"), KeyboardButton(text="greed")],
         ],
         resize_keyboard=True,
         one_time_keyboard=True,

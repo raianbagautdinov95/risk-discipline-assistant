@@ -1,29 +1,29 @@
-"""REST API для Flutter-приложения и Flutter Web сайта.
+"""REST API for the Flutter app and the Flutter Web site.
 
-Установка и запуск:
+Installation and startup:
     pip install fastapi uvicorn
     uvicorn api:app --reload --host 0.0.0.0 --port 8765
 
-Порт 8765 выбран, чтобы не конфликтовать с типичными сервисами (порт 8000
-часто занят всякими gateway/dashboard/API gateway на Windows).
+Port 8765 was chosen to avoid conflicting with typical services (port 8000
+is often taken by various gateway/dashboard/API gateway apps on Windows).
 
-ВАЖНО: при старте API автоматически запускается ФОНОВЫЙ СКАНЕР, который
-анализирует рынок каждые scan_interval_sec (по умолчанию 15 минут) и
-наполняет трекер реальными сигналами. Отдельно запускать main.py не нужно.
+IMPORTANT: on API startup a BACKGROUND SCANNER is launched automatically. It
+analyzes the market every scan_interval_sec (15 minutes by default) and
+fills the tracker with real signals. There's no need to run main.py separately.
 
 Endpoints:
-    GET  /health                   — проверка работы
-    GET  /symbols                  — список отслеживаемых монет
-    GET  /signals/active           — открытые сигналы (сейчас в позиции)
-    GET  /signals/history          — история закрытых сигналов
-    GET  /signals/scan             — немедленный скан всех монет
-    GET  /signal/{symbol}          — анализ конкретной монеты по требованию
-    GET  /stats/summary            — общая статистика (за всё время)
-    GET  /stats/period/{period}    — статистика за период: day | week | month
-    GET  /symbol/{symbol}/stats    — статистика по монете
+    GET  /health                   — health check
+    GET  /symbols                  — list of tracked coins
+    GET  /signals/active           — open signals (currently in a position)
+    GET  /signals/history          — history of closed signals
+    GET  /signals/scan             — immediate scan of all coins
+    GET  /signal/{symbol}          — on-demand analysis of a specific coin
+    GET  /stats/summary            — overall statistics (all time)
+    GET  /stats/period/{period}    — statistics for a period: day | week | month
+    GET  /symbol/{symbol}/stats    — statistics for a coin
 
-CORS разрешён для всех источников, чтобы Flutter Web (обычно localhost:xxxx)
-мог обращаться к этому API без проблем.
+CORS is allowed for all origins so that Flutter Web (usually localhost:xxxx)
+can reach this API without issues.
 """
 import asyncio
 import threading
@@ -36,7 +36,7 @@ try:
     from fastapi.middleware.cors import CORSMiddleware
 except ImportError:  # pragma: no cover
     raise SystemExit(
-        "FastAPI не установлен. Выполните: pip install fastapi uvicorn"
+        "FastAPI is not installed. Run: pip install fastapi uvicorn"
     )
 
 from dotenv import load_dotenv
@@ -45,37 +45,37 @@ load_dotenv()
 
 from main import SignalBot  # noqa: E402
 
-# Lock, чтобы скан не запустился из фонового таска и из ручного /signals/scan одновременно.
+# Lock so a scan doesn't run from the background task and the manual /signals/scan at the same time.
 _scan_lock = threading.Lock()
 
 
 def _do_scan(bot: SignalBot):
-    """Запускает scan_all под локом. Используется и фоновым таском, и ручным endpoint."""
+    """Runs scan_all under the lock. Used by both the background task and the manual endpoint."""
     with _scan_lock:
         return bot.scan_all()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Стартуем фоновый сканер при старте и аккуратно останавливаем при выключении."""
+    """Start the background scanner on startup and shut it down gracefully on exit."""
     bot = get_bot()
     stop_event = asyncio.Event()
     interval = bot.trading_cfg.scan_interval_sec
 
     async def scanner_loop():
-        # Первый скан — сразу, не ждём 15 минут.
-        print(f"[scanner] Фоновый сканер запущен. Интервал: {interval}с")
+        # First scan — immediately, we don't wait 15 minutes.
+        print(f"[scanner] Background scanner started. Interval: {interval}s")
         while not stop_event.is_set():
             try:
                 await asyncio.to_thread(_do_scan, bot)
             except Exception as e:
-                print(f"[scanner] Ошибка скана: {e}")
-            # Ждём интервал или пока не прилетит сигнал остановки.
+                print(f"[scanner] Scan error: {e}")
+            # Wait for the interval or until a stop signal arrives.
             try:
                 await asyncio.wait_for(stop_event.wait(), timeout=interval)
             except asyncio.TimeoutError:
                 pass
-        print("[scanner] Фоновый сканер остановлен")
+        print("[scanner] Background scanner stopped")
 
     task = asyncio.create_task(scanner_loop())
     try:
@@ -90,7 +90,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Crypto Signal Bot API", version="1.0.0", lifespan=lifespan)
 
-# CORS нужен для браузера (Flutter Web шлёт preflight OPTIONS).
+# CORS is needed for the browser (Flutter Web sends preflight OPTIONS).
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -99,7 +99,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Ленивая инициализация бота — чтобы импорт модуля не падал, если нет сети.
+# Lazy bot initialization — so importing the module doesn't fail if there's no network.
 _bot: Optional[SignalBot] = None
 
 
@@ -126,46 +126,46 @@ def symbols():
 
 
 # ---------------------------------------------------------------------- #
-# СИГНАЛЫ                                                                #
+# SIGNALS                                                                #
 # ---------------------------------------------------------------------- #
 
 
 @app.get("/signals/active")
 def active_signals():
-    """Открытые сделки — те, что ещё не хитнули TP/SL и не устарели."""
+    """Open trades — those that haven't hit TP/SL yet and haven't expired."""
     data = get_bot().tracker._load()
     return [s for s in data if s.get("status") == "OPEN"]
 
 
 @app.get("/signals/history")
 def history(limit: int = 100):
-    """История закрытых сигналов (WIN/LOSS/EXPIRED)."""
+    """History of closed signals (WIN/LOSS/EXPIRED)."""
     data = get_bot().tracker._load()
     closed = [s for s in data if s.get("status") != "OPEN"]
-    # Последние сверху.
+    # Most recent first.
     closed.sort(key=lambda s: s.get("closed_at") or s.get("created_at") or "", reverse=True)
     return closed[:limit]
 
 
 @app.get("/signal/{symbol}")
 def single_signal(symbol: str):
-    """Анализирует конкретную монету по запросу — для on-demand проверок."""
+    """Analyzes a specific coin on request — for on-demand checks."""
     bot = get_bot()
     try:
         sig = bot.analyze_symbol(symbol.upper())
         if sig is None:
-            raise HTTPException(404, "Не удалось получить данные для символа")
+            raise HTTPException(404, "Failed to fetch data for the symbol")
         return sig.to_dict()
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(500, f"Ошибка анализа: {e}")
+        raise HTTPException(500, f"Analysis error: {e}")
 
 
 @app.get("/signals/scan")
 def scan_now():
-    """Ручной скан всех монет. Возвращает активные сигналы.
-    Использует общий lock с фоновым сканером — одновременных сканов не будет."""
+    """Manual scan of all coins. Returns active signals.
+    Uses a shared lock with the background scanner — no concurrent scans."""
     bot = get_bot()
     signals = _do_scan(bot)
     return [s.to_dict() for s in signals if s is not None and s.action != "HOLD"]
@@ -173,7 +173,7 @@ def scan_now():
 
 @app.get("/scanner/status")
 def scanner_status():
-    """Статус фонового сканера и конфиг."""
+    """Background scanner status and config."""
     bot = get_bot()
     return {
         "interval_sec": bot.trading_cfg.scan_interval_sec,
@@ -185,7 +185,7 @@ def scanner_status():
 
 
 # ---------------------------------------------------------------------- #
-# СТАТИСТИКА                                                             #
+# STATISTICS                                                             #
 # ---------------------------------------------------------------------- #
 
 
@@ -196,19 +196,19 @@ def _period_to_seconds(period: str) -> int:
         "month": 30 * 24 * 3600,
     }
     if period not in mapping:
-        raise HTTPException(400, f"period должен быть: {', '.join(mapping)}")
+        raise HTTPException(400, f"period must be one of: {', '.join(mapping)}")
     return mapping[period]
 
 
 @app.get("/stats/summary")
 def stats_summary():
-    """Общая статистика за всё время."""
+    """Overall statistics for all time."""
     return get_bot().tracker.summary()
 
 
 @app.get("/stats/period/{period}")
 def stats_period(period: str):
-    """Статистика за период: day | week | month."""
+    """Statistics for a period: day | week | month."""
     seconds = _period_to_seconds(period)
     summary = get_bot().tracker.summary(since_seconds=seconds)
     summary["period"] = period
@@ -217,7 +217,7 @@ def stats_period(period: str):
 
 @app.get("/stats/timeseries")
 def stats_timeseries(period: str = "week"):
-    """Разбивка P&L по дням за указанный период — для построения графика."""
+    """P&L breakdown by day for the given period — for building a chart."""
     seconds = _period_to_seconds(period)
     cutoff = datetime.now(timezone.utc).timestamp() - seconds
     data = get_bot().tracker._load()
@@ -244,13 +244,13 @@ def stats_timeseries(period: str = "week"):
             by_day[day]["losses"] += 1
         by_day[day]["pnl_r"] += s.get("pnl_r") or 0.0
 
-    # Сортируем по дате.
+    # Sort by date.
     return sorted(by_day.values(), key=lambda d: d["date"])
 
 
 @app.get("/symbol/{symbol}/stats")
 def symbol_stats(symbol: str):
-    """Статистика по одной монете."""
+    """Statistics for a single coin."""
     data = get_bot().tracker._load()
     rel = [s for s in data if s["symbol"] == symbol.upper()]
     closed = [s for s in rel if s.get("status") in ("WIN", "LOSS")]

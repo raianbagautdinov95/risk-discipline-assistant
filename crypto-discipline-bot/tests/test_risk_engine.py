@@ -29,7 +29,7 @@ def _trade(**overrides) -> TradeRequest:
         leverage=1,
         reason="ok",
         setup="breakout",
-        emotion="спокоен",
+        emotion="calm",
         losses_today=0.0,
         consecutive_losses=0,
     )
@@ -121,10 +121,11 @@ def test_consecutive_losses_blocks():
 @pytest.mark.parametrize(
     "text",
     [
-        "хочу отыграться за вчера",
         "I want revenge on this market",
-        "polный tilt сегодня",
-        "надо ОТЫГРАТЬСЯ",
+        "need to win it back today",
+        "totally tilted right now",
+        "gotta make the money back",
+        "I need to recover my losses",
     ],
 )
 def test_revenge_trading_detected(text: str):
@@ -132,20 +133,20 @@ def test_revenge_trading_detected(text: str):
 
 
 def test_revenge_trading_negative_cases():
-    assert detect_revenge_trading("отличный сетап на пробое") is False
+    assert detect_revenge_trading("clean breakout setup") is False
     assert detect_revenge_trading(None) is False
 
 
 @pytest.mark.parametrize(
     "emotion",
-    ["злость", "FOMO", "паника", "жадность", "I have anger"],
+    ["anger", "FOMO", "panic", "greed", "I have anger", "feeling greed"],
 )
 def test_bad_emotion_detected(emotion: str):
     assert detect_bad_emotion(emotion) is True
 
 
 def test_good_emotion_passes():
-    req = _trade(emotion="спокоен")
+    req = _trade(emotion="calm")
     violations = check_rules(req, calculate(req), DEFAULT_POLICY)
     assert is_blocked(violations) is False
 

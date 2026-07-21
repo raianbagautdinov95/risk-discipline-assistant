@@ -29,7 +29,7 @@ class _TradeCheckScreenState extends State<TradeCheckScreen> {
   final _leverage = TextEditingController(text: '1');
   final _reason = TextEditingController();
   final _setup = TextEditingController();
-  String _emotion = 'спокоен';
+  String _emotion = 'calm';
   final _lossesToday = TextEditingController(text: '0');
   final _consec = TextEditingController(text: '0');
 
@@ -72,7 +72,7 @@ class _TradeCheckScreenState extends State<TradeCheckScreen> {
 
   Future<void> _submit() async {
     if (_tid == null) {
-      setState(() => _error = 'Сначала укажи Telegram ID в Настройках');
+      setState(() => _error = 'Enter your Telegram ID in Settings first');
       return;
     }
     if (!_formKey.currentState!.validate()) return;
@@ -137,7 +137,7 @@ class _TradeCheckScreenState extends State<TradeCheckScreen> {
       keyboardType: keyboard,
       decoration: InputDecoration(labelText: label),
       validator: required
-          ? (v) => (v == null || v.trim().isEmpty) ? 'Обязательно' : null
+          ? (v) => (v == null || v.trim().isEmpty) ? 'Required' : null
           : null,
     );
   }
@@ -165,8 +165,8 @@ class _TradeCheckScreenState extends State<TradeCheckScreen> {
                   SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Укажи Telegram ID в "Настройках", чтобы сделки сохранились '
-                      'в твой журнал.',
+                      'Enter your Telegram ID in "Settings" so trades are saved '
+                      'to your journal.',
                       style: TextStyle(fontSize: 13),
                     ),
                   ),
@@ -181,19 +181,19 @@ class _TradeCheckScreenState extends State<TradeCheckScreen> {
                 _section(
                   header: const SectionHeader(
                     icon: Icons.show_chart,
-                    title: 'Сделка',
-                    subtitle: 'Что и куда',
+                    title: 'Trade',
+                    subtitle: 'What and which way',
                     color: AppColors.info,
                   ),
                   child: Column(children: [
-                    _input(_pair, label: 'Пара (BTC/USDT)'),
+                    _input(_pair, label: 'Pair (BTC/USDT)'),
                     const SizedBox(height: 10),
                     Row(children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
                           value: _direction,
                           decoration:
-                              const InputDecoration(labelText: 'Направление'),
+                              const InputDecoration(labelText: 'Direction'),
                           items: const [
                             DropdownMenuItem(
                                 value: 'long', child: Text('long')),
@@ -207,14 +207,14 @@ class _TradeCheckScreenState extends State<TradeCheckScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                           child: _input(_leverage,
-                              label: 'Плечо',
+                              label: 'Leverage',
                               keyboard: TextInputType.number)),
                     ]),
                     const SizedBox(height: 10),
                     Row(children: [
                       Expanded(
                           child: _input(_entry,
-                              label: 'Цена входа',
+                              label: 'Entry price',
                               keyboard: TextInputType.number,
                               required: true)),
                       const SizedBox(width: 10),
@@ -234,8 +234,8 @@ class _TradeCheckScreenState extends State<TradeCheckScreen> {
                 _section(
                   header: SectionHeader(
                     icon: Icons.shield,
-                    title: 'Риск',
-                    subtitle: 'Сколько готов потерять',
+                    title: 'Risk',
+                    subtitle: 'How much you are willing to lose',
                     color: AppColors.warn,
                     trailing: TextButton.icon(
                       style: TextButton.styleFrom(
@@ -252,20 +252,20 @@ class _TradeCheckScreenState extends State<TradeCheckScreen> {
                         leverage: int.tryParse(_leverage.text.trim()),
                       ),
                       icon: const Icon(Icons.calculate, size: 16),
-                      label: const Text('Калькулятор',
+                      label: const Text('Calculator',
                           style: TextStyle(fontSize: 12)),
                     ),
                   ),
                   child: Row(children: [
                     Expanded(
                         child: _input(_deposit,
-                            label: 'Депозит, USDT',
+                            label: 'Deposit, USDT',
                             keyboard: TextInputType.number,
                             required: true)),
                     const SizedBox(width: 10),
                     Expanded(
                         child: _input(_risk,
-                            label: 'Риск, %',
+                            label: 'Risk, %',
                             keyboard: TextInputType.number,
                             required: true)),
                   ]),
@@ -274,46 +274,46 @@ class _TradeCheckScreenState extends State<TradeCheckScreen> {
                 _section(
                   header: const SectionHeader(
                     icon: Icons.psychology,
-                    title: 'Дисциплина',
-                    subtitle: 'Сетап и эмоции',
+                    title: 'Discipline',
+                    subtitle: 'Setup and emotions',
                     color: AppColors.primary,
                   ),
                   child: Column(children: [
-                    _input(_reason, label: 'Причина входа'),
+                    _input(_reason, label: 'Reason for entry'),
                     const SizedBox(height: 10),
-                    _input(_setup, label: 'Сетап (пробой / отскок / ретест)'),
+                    _input(_setup, label: 'Setup (breakout / bounce / retest)'),
                     const SizedBox(height: 10),
                     DropdownButtonFormField<String>(
                       value: _emotion,
                       decoration:
-                          const InputDecoration(labelText: 'Эмоция'),
+                          const InputDecoration(labelText: 'Emotion'),
                       items: const [
                         DropdownMenuItem(
-                            value: 'спокоен', child: Text('🧘 спокоен')),
+                            value: 'calm', child: Text('🧘 calm')),
                         DropdownMenuItem(
-                            value: 'уверен', child: Text('💪 уверен')),
+                            value: 'confident', child: Text('💪 confident')),
                         DropdownMenuItem(
-                            value: 'злость', child: Text('😡 злость')),
+                            value: 'anger', child: Text('😡 anger')),
                         DropdownMenuItem(
                             value: 'FOMO', child: Text('🚨 FOMO')),
                         DropdownMenuItem(
-                            value: 'паника', child: Text('😱 паника')),
+                            value: 'panic', child: Text('😱 panic')),
                         DropdownMenuItem(
-                            value: 'жадность', child: Text('🤑 жадность')),
+                            value: 'greed', child: Text('🤑 greed')),
                       ],
                       onChanged: (v) =>
-                          setState(() => _emotion = v ?? 'спокоен'),
+                          setState(() => _emotion = v ?? 'calm'),
                     ),
                     const SizedBox(height: 10),
                     Row(children: [
                       Expanded(
                           child: _input(_lossesToday,
-                              label: 'Дневной убыток, %',
+                              label: 'Daily loss, %',
                               keyboard: TextInputType.number)),
                       const SizedBox(width: 10),
                       Expanded(
                           child: _input(_consec,
-                              label: 'Убытков подряд',
+                              label: 'Consecutive losses',
                               keyboard: TextInputType.number)),
                     ]),
                   ]),
@@ -340,7 +340,7 @@ class _TradeCheckScreenState extends State<TradeCheckScreen> {
                     )
                   : const Icon(Icons.shield, size: 20),
               label: Text(
-                _busy ? 'Анализирую...' : 'Проверить сделку',
+                _busy ? 'Analyzing...' : 'Check trade',
                 style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
@@ -410,7 +410,7 @@ class _ResultDetails extends StatelessWidget {
             children: [
               const SectionHeader(
                 icon: Icons.calculate,
-                title: 'Расчёты',
+                title: 'Calculations',
                 color: AppColors.info,
               ),
               const SizedBox(height: 12),
@@ -419,7 +419,7 @@ class _ResultDetails extends StatelessWidget {
                 runSpacing: 8,
                 children: [
                   PricePill(
-                    label: 'Риск',
+                    label: 'Risk',
                     value: '${resp.calc.riskMoney} \$',
                     color: AppColors.warn,
                     icon: Icons.warning_amber_rounded,
@@ -431,7 +431,7 @@ class _ResultDetails extends StatelessWidget {
                     icon: Icons.balance,
                   ),
                   PricePill(
-                    label: 'Размер',
+                    label: 'Size',
                     value:
                         resp.calc.positionSize?.toStringAsFixed(6) ?? '—',
                     color: AppColors.primary,
@@ -439,8 +439,8 @@ class _ResultDetails extends StatelessWidget {
                   ),
                   if (resp.calc.leverageCritical)
                     PricePill(
-                      label: 'Плечо',
-                      value: 'КРИТИЧНО',
+                      label: 'Leverage',
+                      value: 'CRITICAL',
                       color: AppColors.danger,
                       icon: Icons.bolt,
                     ),
@@ -464,9 +464,9 @@ class _ResultDetails extends StatelessWidget {
               children: [
                 SectionHeader(
                   icon: Icons.warning_rounded,
-                  title: 'Нарушения правил',
+                  title: 'Rule violations',
                   subtitle:
-                      '${resp.violations.length} ${resp.violations.length == 1 ? "нарушение" : "нарушений"}',
+                      '${resp.violations.length} ${resp.violations.length == 1 ? "violation" : "violations"}',
                   color: AppColors.danger,
                 ),
                 const SizedBox(height: 12),

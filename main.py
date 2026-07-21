@@ -1,9 +1,9 @@
-"""Crypto Signal Bot — сигнальный бот БЕЗ реального исполнения ордеров.
-Только анализ рынка и уведомления: когда входить в сделку и когда выходить.
+"""Crypto Signal Bot — a signal bot WITHOUT real order execution.
+Market analysis and notifications only: when to enter a trade and when to exit.
 
-Запуск:
-    python main.py           — непрерывное сканирование раз в N секунд
-    python main.py --once    — один проход по всем монетам и выход
+Usage:
+    python main.py           — continuous scanning every N seconds
+    python main.py --once    — a single pass over all coins, then exit
 """
 import argparse
 import sys
@@ -25,7 +25,7 @@ from utils.logger import setup_logger
 
 
 class SignalBot:
-    """Ядро бота. Отделено от main(), чтобы потом легко обернуть в REST API."""
+    """The bot's core. Separated from main() so it can easily be wrapped in a REST API later."""
 
     def __init__(self):
         self.logger = setup_logger()
@@ -47,20 +47,20 @@ class SignalBot:
 
         self.logger.info("Signal Bot initialized")
         self.logger.info(f"Symbols: {', '.join(self.trading_cfg.symbols)}")
-        htf = self.trading_cfg.htf_timeframe or "(выкл)"
+        htf = self.trading_cfg.htf_timeframe or "(off)"
         self.logger.info(
             f"Timeframes: htf={htf}, trend={self.trading_cfg.trend_timeframe}, "
             f"entry={self.trading_cfg.entry_timeframe}"
         )
-        self.logger.info(f"AI-анализ: {'включён' if self.ai.is_available() else 'выключен'}")
+        self.logger.info(f"AI analysis: {'enabled' if self.ai.is_available() else 'disabled'}")
 
     # ---------------------------------------------------------------- #
-    # Главная единица работы — может вызываться и из цикла, и из API.  #
+    # The main unit of work — can be called both from the loop and API. #
     # ---------------------------------------------------------------- #
 
     def analyze_symbol(self, symbol: str) -> Signal:
-        """Полный анализ одной монеты. Возвращает Signal (может быть HOLD)."""
-        # 1. Скачиваем свечи с двух (или трёх) таймфреймов.
+        """Full analysis of a single coin. Returns a Signal (may be HOLD)."""
+        # 1. Download candles from two (or three) timeframes.
         entry_df = self.market.get_candles(
             symbol, self.trading_cfg.entry_timeframe, self.trading_cfg.candles_limit
         )
@@ -68,13 +68,13 @@ class SignalBot:
             symbol, self.trading_cfg.trend_timeframe, self.trading_cfg.candles_limit
         )
         if entry_df is None or trend_df is None:
-            self.logger.warning(f"{symbol}: не удалось получить свечи, пропускаем")
+            self.logger.warning(f"{symbol}: failed to fetch candles, skipping")
             return None
         if len(entry_df) < 50 or len(trend_df) < 50:
-            self.logger.warning(f"{symbol}: слишком мало свечей")
+            self.logger.warning(f"{symbol}: too few candles")
             return None
 
-        # Верхний таймфрейм (4H) — опциональный.
+        # Higher timeframe (4H) — optional.
         htf_snap = None
         if self.trading_cfg.htf_timeframe:
             htf_df = self.market.get_candles(
@@ -84,30 +84,30 @@ class SignalBot:
                 htf_df = compute_indicators(htf_df, self.trading_cfg.atr_period)
                 htf_snap = indicator_snapshot(htf_df)
 
-        # 2. Считаем индикаторы и снимки состояния.
+        # 2. Compute indicators and state snapshots.
         entry_df = compute_indicators(entry_df, self.trading_cfg.atr_period)
         trend_df = compute_indicators(trend_df, self.trading_cfg.atr_period)
         entry_snap = indicator_snapshot(entry_df)
         trend_snap = indicator_snapshot(trend_df)
 
-        # 3. Строим сигнал (с учётом 4H, если доступен).
+        # 3. Build the signal (taking 4H into account, if available).
         signal = self.engine.generate(symbol, entry_snap, trend_snap, htf_snap)
 
-        # 4. Если есть реальный сигнал — просим AI (если доступен) и уведомляем.
+        # 4. If there's a real signal — ask the AI (if available) and notify.
         ai_review = None
         if signal.action != "HOLD":
-            # Ранний выход: если на этом символе есть открытая позиция в
-            # противоположном направлении — закрываем её по текущей цене.
+            # Early exit: if there's an open position on this symbol in the
+            # opposite direction — close it at the current price.
             closed = self.tracker.close_early(
                 symbol=symbol,
                 opposite_action=signal.action,
                 current_price=signal.entry,
-                reason=f"Противоположный сигнал: {signal.action}",
+                reason=f"Opposite signal: {signal.action}",
             )
             if closed > 0:
                 self.logger.info(
-                    f"{symbol}: закрыто досрочно {closed} позиц. "
-                    f"из-за противоположного {signal.action}"
+                    f"{symbol}: closed early {closed} position(s) "
+                    f"due to opposite {signal.action}"
                 )
 
             if self.ai.is_available():
@@ -116,18 +116,18 @@ class SignalBot:
             self.history.record(signal.to_dict(), ai_review)
             self.tracker.add_signal(signal.to_dict())
         else:
-            # HOLD просто логируем, не рассылаем.
+            # HOLD is just logged, not broadcast.
             self.logger.debug(f"{symbol}: HOLD — {'; '.join(signal.reasons)}")
 
         return signal
 
     def scan_all(self) -> List[Signal]:
-        """Один проход по всем монетам."""
-        # Сначала обновим статусы ранее выданных сигналов.
+        """A single pass over all coins."""
+        # First, refresh the statuses of previously issued signals.
         changes = self.tracker.update_open_signals()
         if any(changes.values()):
             self.logger.info(
-                f"Трекер: закрыто WIN={changes['closed_win']}, "
+                f"Tracker: closed WIN={changes['closed_win']}, "
                 f"LOSS={changes['closed_loss']}, EXPIRED={changes['expired']}, "
                 f"OPEN={changes['still_open']}"
             )
@@ -139,20 +139,20 @@ class SignalBot:
                 if sig is not None:
                     results.append(sig)
             except Exception as e:
-                self.logger.exception(f"{symbol}: ошибка анализа: {e}")
-            # Небольшая пауза между запросами, чтобы не упереться в rate limit OKX.
+                self.logger.exception(f"{symbol}: analysis error: {e}")
+            # A short pause between requests to avoid hitting the OKX rate limit.
             time.sleep(0.3)
 
         actionable = [s for s in results if s.action != "HOLD"]
         self.logger.info(
-            f"Скан завершён. Проверено: {len(results)}, активных сигналов: {len(actionable)}"
+            f"Scan complete. Checked: {len(results)}, active signals: {len(actionable)}"
         )
 
-        # Выводим сводку по трекеру раз в скан.
+        # Print a tracker summary once per scan.
         summary = self.tracker.summary()
         if summary.get("closed", 0) > 0:
             self.logger.info(
-                f"Общая статистика: WIN={summary['wins']}, LOSS={summary['losses']}, "
+                f"Overall stats: WIN={summary['wins']}, LOSS={summary['losses']}, "
                 f"win rate={summary['win_rate_pct']}%, "
                 f"P&L={summary['total_r']}R"
             )
@@ -160,24 +160,24 @@ class SignalBot:
         return results
 
     def run_forever(self) -> None:
-        """Бесконечный цикл сканирования."""
-        self.logger.info(f"Старт непрерывного сканирования (каждые "
-                         f"{self.trading_cfg.scan_interval_sec} сек)")
+        """Infinite scanning loop."""
+        self.logger.info(f"Starting continuous scanning (every "
+                         f"{self.trading_cfg.scan_interval_sec} sec)")
         try:
             while True:
                 self.scan_all()
                 time.sleep(self.trading_cfg.scan_interval_sec)
         except KeyboardInterrupt:
-            self.logger.info("Остановлено пользователем")
+            self.logger.info("Stopped by user")
             summary = self.history.summary()
-            self.logger.info(f"Всего записано сигналов: {summary['total']} "
+            self.logger.info(f"Total signals recorded: {summary['total']} "
                              f"(BUY: {summary['buy']}, SELL: {summary['sell']})")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Crypto signal bot (анализ, без торговли)")
+    parser = argparse.ArgumentParser(description="Crypto signal bot (analysis, no trading)")
     parser.add_argument("--once", action="store_true",
-                        help="Сделать один проход по всем монетам и выйти")
+                        help="Make a single pass over all coins and exit")
     args = parser.parse_args()
 
     load_dotenv()

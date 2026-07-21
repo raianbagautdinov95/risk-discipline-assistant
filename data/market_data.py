@@ -1,4 +1,4 @@
-"""Получение рыночных данных с OKX через публичные endpoints (без API-ключей)."""
+"""Fetching market data from OKX via public endpoints (no API keys)."""
 from typing import List, Optional, Dict, Any
 import requests
 import pandas as pd
@@ -7,7 +7,7 @@ import pandas as pd
 class MarketData:
     BASE_URL = "https://www.okx.com"
 
-    # OKX принимает эти значения для bar:
+    # OKX accepts these values for bar:
     #   1m, 3m, 5m, 15m, 30m, 1H, 2H, 4H, 6H, 12H, 1D, 1W, 1M
     VALID_TIMEFRAMES = {"1m", "3m", "5m", "15m", "30m", "1H", "2H", "4H", "6H", "12H", "1D", "1W", "1M"}
 
@@ -15,11 +15,11 @@ class MarketData:
         self.timeout = timeout
 
     def get_candles(self, symbol: str, timeframe: str, limit: int = 200) -> Optional[pd.DataFrame]:
-        """Возвращает DataFrame со свечами [timestamp, open, high, low, close, volume].
-        symbol в формате 'BTC-USDT'. Данные отсортированы по возрастанию времени.
+        """Returns a DataFrame of candles [timestamp, open, high, low, close, volume].
+        symbol in 'BTC-USDT' format. Data is sorted by ascending time.
         """
         if timeframe not in self.VALID_TIMEFRAMES:
-            raise ValueError(f"timeframe '{timeframe}' не поддерживается OKX")
+            raise ValueError(f"timeframe '{timeframe}' is not supported by OKX")
 
         try:
             url = f"{self.BASE_URL}/api/v5/market/candles"
@@ -30,14 +30,14 @@ class MarketData:
             if payload.get("code") != "0" or not payload.get("data"):
                 return None
 
-            # OKX возвращает: [ts, o, h, l, c, vol, volCcy, volCcyQuote, confirm]
+            # OKX returns: [ts, o, h, l, c, vol, volCcy, volCcyQuote, confirm]
             rows = payload["data"]
             df = pd.DataFrame(
                 rows,
                 columns=["timestamp", "open", "high", "low", "close", "volume",
                          "vol_ccy", "vol_ccy_quote", "confirm"]
             )
-            # Приводим типы и сортируем по возрастанию времени.
+            # Cast types and sort by ascending time.
             df = df.astype({
                 "timestamp": "int64",
                 "open": "float64", "high": "float64", "low": "float64",
@@ -55,18 +55,18 @@ class MarketData:
 
     def get_historical_candles(self, symbol: str, timeframe: str,
                                 total_candles: int) -> Optional[pd.DataFrame]:
-        """Скачивает большой объём истории через пагинацию (endpoint history-candles).
-        OKX возвращает максимум 100 за запрос, поэтому делаем несколько вызовов.
-        total_candles — сколько свечей нужно всего (например, 2000 для ~3 недель на 15m).
+        """Downloads a large amount of history via pagination (the history-candles endpoint).
+        OKX returns at most 100 per request, so we make several calls.
+        total_candles — how many candles are needed in total (e.g. 2000 for ~3 weeks on 15m).
         """
         if timeframe not in self.VALID_TIMEFRAMES:
-            raise ValueError(f"timeframe '{timeframe}' не поддерживается OKX")
+            raise ValueError(f"timeframe '{timeframe}' is not supported by OKX")
 
         all_rows = []
-        before_ts = ""  # "" = самые свежие
-        batch_size = 100  # максимум для history-candles
+        before_ts = ""  # "" = the most recent
+        batch_size = 100  # maximum for history-candles
         collected = 0
-        max_iters = (total_candles // batch_size) + 5  # страховка от бесконечного цикла
+        max_iters = (total_candles // batch_size) + 5  # safeguard against an infinite loop
         iters = 0
 
         while collected < total_candles and iters < max_iters:
@@ -78,7 +78,7 @@ class MarketData:
                     "limit": str(batch_size),
                 }
                 if before_ts:
-                    # OKX: after — метка, ДО которой тянуть (идём в прошлое).
+                    # OKX: after — the marker BEFORE which to fetch (going into the past).
                     params["after"] = before_ts
 
                 resp = requests.get(url, params=params, timeout=self.timeout)
@@ -93,10 +93,10 @@ class MarketData:
 
                 all_rows.extend(rows)
                 collected = len(all_rows)
-                # Самая старая свеча в этом ответе — её timestamp для следующего запроса.
+                # The oldest candle in this response — its timestamp for the next request.
                 before_ts = rows[-1][0]
             except Exception as e:
-                print(f"[market_data] Ошибка пагинации для {symbol} {timeframe}: {e}")
+                print(f"[market_data] Pagination error for {symbol} {timeframe}: {e}")
                 break
 
         if not all_rows:
@@ -117,7 +117,7 @@ class MarketData:
         return df[["timestamp", "datetime", "open", "high", "low", "close", "volume"]]
 
     def get_ticker(self, symbol: str) -> Optional[Dict[str, Any]]:
-        """Текущая цена и 24ч статистика."""
+        """Current price and 24h statistics."""
         try:
             url = f"{self.BASE_URL}/api/v5/market/ticker"
             resp = requests.get(url, params={"instId": symbol}, timeout=self.timeout)

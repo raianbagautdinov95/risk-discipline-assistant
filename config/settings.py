@@ -1,4 +1,4 @@
-"""Настройки бота. Никаких ключей биржи — бот не торгует, только анализирует."""
+"""Bot settings. No exchange keys — the bot doesn't trade, it only analyzes."""
 import os
 from dataclasses import dataclass, field
 from typing import List
@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-# Топ-10 монет по капитализации (стабильные, ликвидные на OKX).
-# Символы в формате OKX: BASE-USDT
+# Top 10 coins by market cap (stable, liquid on OKX).
+# Symbols in OKX format: BASE-USDT
 DEFAULT_SYMBOLS: List[str] = [
     "BTC-USDT",
     "ETH-USDT",
@@ -25,51 +25,51 @@ DEFAULT_SYMBOLS: List[str] = [
 
 @dataclass
 class TradingConfig:
-    # Тройной мультитаймфрейм: 4H — макро-тренд, 1H — средний тренд, 15m — вход.
-    htf_timeframe: str = "4H"         # верхний фильтр (может быть "" чтобы отключить)
-    trend_timeframe: str = "1H"       # средний фильтр направления
-    entry_timeframe: str = "15m"      # точный вход
+    # Triple multi-timeframe: 4H — macro trend, 1H — mid trend, 15m — entry.
+    htf_timeframe: str = "4H"         # top filter (can be "" to disable)
+    trend_timeframe: str = "1H"       # mid-level direction filter
+    entry_timeframe: str = "15m"      # precise entry
     symbols: List[str] = field(default_factory=lambda: DEFAULT_SYMBOLS.copy())
 
-    # Параметры управления риском в сигнале (для расчёта SL/TP).
+    # Risk-management parameters within the signal (for computing SL/TP).
     atr_period: int = 14
-    stop_loss_atr_mult: float = 1.5   # SL = entry - 1.5 * ATR (для LONG)
+    stop_loss_atr_mult: float = 1.5   # SL = entry - 1.5 * ATR (for LONG)
     take_profit_atr_mult: float = 3.0 # TP = entry + 3.0 * ATR → R:R = 1:2
 
-    # Сколько свечей тянем для расчёта индикаторов.
+    # How many candles we pull to compute indicators.
     candles_limit: int = 200
 
-    # Как часто сканировать рынок (сек). 900 = 15 минут — совпадает с entry_timeframe.
+    # How often to scan the market (sec). 900 = 15 minutes — matches entry_timeframe.
     scan_interval_sec: int = 900
 
-    # Минимальная "уверенность" сигнала, чтобы его показать (0..100).
-    # После бэктеста подняли с 60 → 72: это реально фильтрует шум.
+    # Minimum signal "confidence" required to show it (0..100).
+    # After backtesting we raised it from 60 → 72: this genuinely filters out noise.
     min_confidence: float = 72.0
 
-    # Cooldown: после сигнала по символу N следующих свечей мы не выдаём
-    # сигнал того же направления. Это защищает от серии входов на одном сетапе.
-    # 8 x 15m = 2 часа — стандарт для intraday.
+    # Cooldown: after a signal for a symbol, we don't issue a signal of the same
+    # direction for the next N candles. This protects against a series of entries
+    # on a single setup. 8 x 15m = 2 hours — a standard for intraday.
     cooldown_bars: int = 8
 
-    # Требовать хотя бы один "сильный" паттерн: дивергенцию RSI/MACD
-    # или свечной паттерн на ключевом уровне.
-    # Если False — сигнал может идти только на простом консенсусе индикаторов.
+    # Require at least one "strong" pattern: an RSI/MACD divergence
+    # or a candlestick pattern at a key level.
+    # If False, a signal may be issued on simple indicator consensus alone.
     require_strong_confluence: bool = True
 
 
 @dataclass
 class AIConfig:
-    """DeepSeek используется как опциональное второе мнение."""
+    """DeepSeek is used as an optional second opinion."""
     enabled: bool = bool(os.getenv("DEEPSEEK_API_KEY", "").strip())
     api_key: str = os.getenv("DEEPSEEK_API_KEY", "")
     model: str = "deepseek-chat"
     max_tokens: int = 500
-    temperature: float = 0.3  # ниже = более консистентно
+    temperature: float = 0.3  # lower = more consistent
 
 
 @dataclass
 class NotifyConfig:
-    """Настройки уведомлений."""
+    """Notification settings."""
     console: bool = True
     save_history: bool = True
     telegram_enabled: bool = bool(os.getenv("TELEGRAM_BOT_TOKEN", "").strip())

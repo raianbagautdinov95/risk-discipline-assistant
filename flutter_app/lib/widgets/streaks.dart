@@ -81,21 +81,21 @@ class StreaksStrip extends StatelessWidget {
       ),
       _Achievement(
         icon: Icons.shield,
-        label: 'Чистая неделя',
-        value: cleanWeek ? '7 дней' : 'locked',
+        label: 'Clean week',
+        value: cleanWeek ? '7 days' : 'locked',
         color: AppColors.success,
         unlocked: cleanWeek,
       ),
       _Achievement(
         icon: Icons.local_fire_department,
-        label: '3 WIN подряд',
+        label: '3 WINs in a row',
         value: winStreak3 ? 'unlocked' : 'locked',
         color: AppColors.warn,
         unlocked: winStreak3,
       ),
       _Achievement(
         icon: Icons.workspace_premium,
-        label: '5 WIN подряд',
+        label: '5 WINs in a row',
         value: winStreak5 ? 'unlocked' : 'locked',
         color: AppColors.warn,
         unlocked: winStreak5,
@@ -150,7 +150,7 @@ class StreaksStrip extends StatelessWidget {
             const Icon(Icons.local_fire_department,
                 color: Colors.white, size: 22),
             const SizedBox(width: 8),
-            const Text('Достижения',
+            const Text('Achievements',
                 style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
@@ -175,13 +175,13 @@ class StreaksStrip extends StatelessWidget {
               _bigStat(
                 icon: Icons.shield,
                 value: '$discipline',
-                label: 'дней без нарушений',
+                label: 'days without violations',
               ),
               _divider(),
               _bigStat(
                 icon: Icons.local_fire_department,
                 value: '$winStreak',
-                label: 'WIN-стрик',
+                label: 'WIN streak',
               ),
               _divider(),
               _bigStat(

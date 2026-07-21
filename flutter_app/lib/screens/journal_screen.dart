@@ -115,13 +115,13 @@ class _JournalScreenState extends State<JournalScreen> {
       await _api.closeTrade(_tid!, trade.id, result);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Сделка #${trade.id} закрыта: ${result.outcome}')),
+        SnackBar(content: Text('Trade #${trade.id} closed: ${result.outcome}')),
       );
       await _load();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка: $e')),
+        SnackBar(content: Text('Error: $e')),
       );
     }
   }
@@ -146,7 +146,7 @@ class _JournalScreenState extends State<JournalScreen> {
     Clipboard.setData(ClipboardData(text: url));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Ссылка на CSV скопирована — открой в новой вкладке'),
+        content: const Text('CSV link copied — open it in a new tab'),
         action: SnackBarAction(
           label: 'OK',
           onPressed: () {},
@@ -169,7 +169,7 @@ class _JournalScreenState extends State<JournalScreen> {
               const SizedBox(height: 8),
               Text(_error!, textAlign: TextAlign.center),
               const SizedBox(height: 12),
-              FilledButton(onPressed: _load, child: const Text('Повторить')),
+              FilledButton(onPressed: _load, child: const Text('Retry')),
             ],
           ),
         ),
@@ -178,16 +178,16 @@ class _JournalScreenState extends State<JournalScreen> {
     if (_tid == null) {
       return const HintState(
         icon: Icons.account_circle_outlined,
-        title: 'Не указан Telegram ID',
+        title: 'Telegram ID not set',
         subtitle:
-            'Перейди в "Настройки" и укажи свой ID — тогда увидишь журнал.',
+            'Go to "Settings" and enter your ID to see your journal.',
       );
     }
     if (_trades.isEmpty) {
       return const HintState(
         icon: Icons.history_edu,
-        title: 'Журнал пуст',
-        subtitle: 'Проведи первую проверку сделки — она здесь появится.',
+        title: 'Journal is empty',
+        subtitle: 'Run your first trade check — it will show up here.',
       );
     }
     final visible = _filtered;
@@ -199,9 +199,9 @@ class _JournalScreenState extends State<JournalScreen> {
             child: visible.isEmpty
                 ? const HintState(
                     icon: Icons.filter_alt_off,
-                    title: 'По фильтру ничего',
+                    title: 'Nothing matches the filter',
                     subtitle:
-                        'Сбрось фильтр или поиск чтобы увидеть все сделки.',
+                        'Clear the filter or search to see all trades.',
                   )
                 : RefreshIndicator(
                     onRefresh: _load,
@@ -231,7 +231,7 @@ class _JournalScreenState extends State<JournalScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _exportCsv,
         icon: const Icon(Icons.download),
-        label: const Text('Экспорт CSV'),
+        label: const Text('Export CSV'),
       ),
     );
   }
@@ -270,7 +270,7 @@ class _JournalScreenState extends State<JournalScreen> {
             onChanged: (v) => setState(() => _query = v),
             decoration: InputDecoration(
               prefixIcon: const Icon(Icons.search, size: 18),
-              hintText: 'Поиск по паре (BTC, ETH)',
+              hintText: 'Search by pair (BTC, ETH)',
               isDense: true,
               suffixIcon: _query.isEmpty
                   ? null
@@ -287,15 +287,15 @@ class _JournalScreenState extends State<JournalScreen> {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(children: [
-              chip('Все ${_trades.length}', JournalFilter.all),
-              chip('РАЗРЕШЕНО', JournalFilter.allowed,
+              chip('All ${_trades.length}', JournalFilter.all),
+              chip('ALLOWED', JournalFilter.allowed,
                   color: AppColors.success),
-              chip('ЗАПРЕЩЕНО', JournalFilter.forbidden,
+              chip('FORBIDDEN', JournalFilter.forbidden,
                   color: AppColors.danger),
-              chip('ЖДАТЬ', JournalFilter.wait, color: AppColors.warn),
+              chip('WAIT', JournalFilter.wait, color: AppColors.warn),
               chip('✅ WIN', JournalFilter.wins, color: AppColors.success),
               chip('❌ LOSS', JournalFilter.losses, color: AppColors.danger),
-              chip('⏳ Не закрыты', JournalFilter.pending,
+              chip('⏳ Open', JournalFilter.pending,
                   color: AppColors.warn),
             ]),
           ),
@@ -449,7 +449,7 @@ class _PremiumTradeCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
-                t.isClosed ? t.outcome : 'не закрыта',
+                t.isClosed ? t.outcome : 'open',
                 style: TextStyle(
                   color: _outcomeColor,
                   fontWeight: FontWeight.w700,
@@ -479,7 +479,7 @@ class _PremiumTradeCard extends StatelessWidget {
                 ),
                 onPressed: onClose,
                 icon: const Icon(Icons.task_alt, size: 14),
-                label: const Text('Закрыть'),
+                label: const Text('Close'),
               ),
           ]),
         ],
@@ -507,13 +507,13 @@ class _CloseTradeDialogState extends State<_CloseTradeDialog> {
   Widget build(BuildContext context) {
     final t = widget.trade;
     return AlertDialog(
-      title: Text('Закрыть #${t.id}  ${t.pair}'),
+      title: Text('Close #${t.id}  ${t.pair}'),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Исход:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text('Outcome:', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
             Wrap(
               spacing: 6,
@@ -529,7 +529,7 @@ class _CloseTradeDialogState extends State<_CloseTradeDialog> {
               controller: _pnl,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
-                labelText: 'P&L, % (например 2.5 или -1.0)',
+                labelText: 'P&L, % (e.g. 2.5 or -1.0)',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -538,7 +538,7 @@ class _CloseTradeDialogState extends State<_CloseTradeDialog> {
               controller: _exit,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
-                labelText: 'Цена выхода (опционально)',
+                labelText: 'Exit price (optional)',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -547,7 +547,7 @@ class _CloseTradeDialogState extends State<_CloseTradeDialog> {
               controller: _notes,
               maxLines: 2,
               decoration: const InputDecoration(
-                labelText: 'Заметки (опционально)',
+                labelText: 'Notes (optional)',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -557,7 +557,7 @@ class _CloseTradeDialogState extends State<_CloseTradeDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Отмена'),
+          child: const Text('Cancel'),
         ),
         FilledButton(
           onPressed: () {
@@ -574,7 +574,7 @@ class _CloseTradeDialogState extends State<_CloseTradeDialog> {
               ),
             );
           },
-          child: const Text('Сохранить'),
+          child: const Text('Save'),
         ),
       ],
     );

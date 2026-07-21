@@ -12,14 +12,15 @@ from app.services.ollama_client import OllamaClient
 logger = logging.getLogger(__name__)
 
 
-PARSE_SYSTEM_PROMPT = """Ты помощник, который парсит сделку трейдера из текста на русском.
+PARSE_SYSTEM_PROMPT = """You are an assistant that parses a trader's trade from free text.
+The input is in English.
 
-На вход — фраза вида:
-  "BTC long на 67500 со стопом 66800 и тейком 69200"
-  "Шорт ETH 3500, стоп 3550"
-  "хочу зайти в SOL лонг 145, стоп 140 тейк 155"
+Input is a phrase like:
+  "BTC long at 67500 with stop 66800 and take 69200"
+  "Short ETH 3500, stop 3550"
+  "want to enter SOL long 145, stop 140 take 155"
 
-Верни СТРОГО JSON:
+Return STRICTLY JSON:
 {
   "pair": "BTC/USDT",
   "direction": "long",
@@ -28,8 +29,8 @@ PARSE_SYSTEM_PROMPT = """Ты помощник, который парсит сд
   "take_profit": 69200
 }
 
-Если информации не хватает (например нет цены входа) — поставь поле в null.
-Не выдумывай данных. Если не понял — верни {"error": "не понял"}.
+If information is missing (e.g. no entry price) — set the field to null.
+Do not invent data. If you can't understand it — return {"error": "not understood"}.
 """
 
 
@@ -59,10 +60,11 @@ class VoiceService:
             raise RuntimeError("OpenAI key required for voice transcription.")
         file = io.BytesIO(audio_bytes)
         file.name = filename
+        # Force English transcription for a consistent English-only workflow.
         resp = await self._openai.audio.transcriptions.create(
             model=self._whisper_model,
             file=file,
-            language="ru",
+            language="en",
         )
         return (resp.text or "").strip()
 
@@ -92,7 +94,7 @@ class VoiceService:
             except Exception as exc:
                 logger.warning("OpenAI voice parse failed: %s", exc)
 
-        return {"error": "AI парсер не настроен."}
+        return {"error": "AI parser is not configured."}
 
 
 def make_voice_service() -> VoiceService:

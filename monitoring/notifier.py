@@ -1,4 +1,4 @@
-"""Отправка уведомлений о сигналах: в консоль, опционально — в Telegram."""
+"""Sending signal notifications: to the console and, optionally, to Telegram."""
 from typing import Optional, Dict, Any
 import logging
 import requests
@@ -12,7 +12,7 @@ class Notifier:
         self.logger = logger
 
     def send(self, signal_dict: Dict[str, Any], ai_review: Optional[Dict[str, Any]] = None) -> None:
-        """Рассылает сигнал по всем включённым каналам."""
+        """Broadcasts the signal across all enabled channels."""
         message = self._format(signal_dict, ai_review)
 
         if self.cfg.console:
@@ -31,8 +31,8 @@ class Notifier:
             f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
             f"  {emoji}  {s['symbol']}",
             f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-            f"Уверенность: {s['confidence']}%",
-            f"Цена входа:  {s['entry']}",
+            f"Confidence: {s['confidence']}%",
+            f"Entry price: {s['entry']}",
         ]
         if action != "HOLD":
             lines += [
@@ -40,16 +40,16 @@ class Notifier:
                 f"Take Profit: {s['take_profit']}",
                 f"R:R:         {s['risk_reward']}",
             ]
-        lines.append(f"Тренд 1H:    {s['trend_1h']}")
+        lines.append(f"1H trend:    {s['trend_1h']}")
         lines.append("")
-        lines.append("Обоснование:")
+        lines.append("Rationale:")
         for r in s.get("reasons", []):
             lines.append(f"  • {r}")
 
         if ai_review:
             lines.append("")
-            agree = "согласен" if ai_review.get("agree") else "НЕ согласен"
-            lines.append(f"AI-обзор ({agree}, {ai_review.get('confidence', 0):.0f}%):")
+            agree = "agrees" if ai_review.get("agree") else "does NOT agree"
+            lines.append(f"AI review ({agree}, {ai_review.get('confidence', 0):.0f}%):")
             comment = ai_review.get("comment", "")
             if comment:
                 lines.append(f"  {comment}")
@@ -65,7 +65,7 @@ class Notifier:
             print(message)
 
     def _telegram(self, message: str) -> None:
-        """Отправка в Telegram. Работает только если задан TELEGRAM_BOT_TOKEN и TELEGRAM_CHAT_ID."""
+        """Sending to Telegram. Works only if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are set."""
         if not (self.cfg.telegram_token and self.cfg.telegram_chat_id):
             return
         try:

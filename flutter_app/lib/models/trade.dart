@@ -90,11 +90,11 @@ class Trade {
   String get decisionRu {
     switch (decision) {
       case 'ALLOWED':
-        return 'РАЗРЕШЕНО';
+        return 'ALLOWED';
       case 'FORBIDDEN':
-        return 'ЗАПРЕЩЕНО';
+        return 'FORBIDDEN';
       case 'WAIT':
-        return 'ЖДАТЬ';
+        return 'WAIT';
       default:
         return decision;
     }
@@ -190,11 +190,11 @@ class TradeResponse {
   String get decisionRu {
     switch (decision) {
       case 'ALLOWED':
-        return 'РАЗРЕШЕНО';
+        return 'ALLOWED';
       case 'FORBIDDEN':
-        return 'ЗАПРЕЩЕНО';
+        return 'FORBIDDEN';
       case 'WAIT':
-        return 'ЖДАТЬ';
+        return 'WAIT';
       default:
         return decision;
     }

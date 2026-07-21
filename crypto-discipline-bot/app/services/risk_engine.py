@@ -6,21 +6,23 @@ from dataclasses import dataclass
 from app.schemas import RiskCalc, RuleViolation, TradeRequest
 
 
+# Keyword detection for free-text input, so a trade description in plain
+# English is still caught by the rule engine.
 _REVENGE_PATTERNS = [
-    r"\bотыграть?ся\b",
-    r"\bвернуть\b",
-    r"\bревендж\b",
     r"\brevenge\b",
-    r"\btilt\b",
-    r"\bтилт\b",
+    r"\btilt(ed|ing)?\b",
+    r"\bwin\s+(it\s+)?back\b",
+    r"\bget\s+(it\s+)?back\b",
+    r"\bmake\s+(it\s+|the\s+money\s+)?back\b",
+    r"\brecover\s+(my\s+)?loss(es)?\b",
 ]
 
 _BAD_EMOTIONS = [
-    "злость", "anger",
-    "паника", "panic",
-    "жадность", "greed",
-    "fomo", "фомо",
-    "страх потерять", "fear of missing",
+    "anger",
+    "panic",
+    "greed",
+    "fomo",
+    "fear of missing",
 ]
 
 
@@ -84,53 +86,53 @@ def check_rules(req: TradeRequest, calc: RiskCalc, policy: UserPolicy) -> list[R
     if req.stop_loss is None:
         violations.append(RuleViolation(
             code="NO_STOP_LOSS",
-            message="Сделка без stop-loss запрещена.",
+            message="Trading without a stop-loss is forbidden.",
         ))
 
     if req.risk_percent > policy.max_risk_percent:
         violations.append(RuleViolation(
             code="RISK_TOO_HIGH",
-            message=f"Риск {req.risk_percent}% превышает лимит "
-                    f"{policy.max_risk_percent}% на сделку.",
+            message=f"Risk {req.risk_percent}% exceeds the "
+                    f"{policy.max_risk_percent}% per-trade limit.",
         ))
 
     if calc.rr_ratio is not None and calc.rr_ratio < policy.min_rr:
         violations.append(RuleViolation(
             code="RR_TOO_LOW",
-            message=f"R:R = {calc.rr_ratio} ниже минимума 1:{policy.min_rr}.",
+            message=f"R:R = {calc.rr_ratio} is below the 1:{policy.min_rr} minimum.",
         ))
 
     if req.leverage > policy.max_leverage:
         violations.append(RuleViolation(
             code="LEVERAGE_TOO_HIGH",
-            message=f"Плечо x{req.leverage} превышает лимит x{policy.max_leverage}.",
+            message=f"Leverage x{req.leverage} exceeds the x{policy.max_leverage} limit.",
         ))
 
     if req.losses_today >= policy.daily_loss_limit:
         violations.append(RuleViolation(
             code="DAILY_LOSS_REACHED",
-            message=f"Дневной лимит убытка достигнут: -{req.losses_today}% "
-                    f"(лимит -{policy.daily_loss_limit}%). На сегодня — стоп.",
+            message=f"Daily loss limit reached: -{req.losses_today}% "
+                    f"(limit -{policy.daily_loss_limit}%). Done for today.",
         ))
 
     if req.consecutive_losses >= 2:
         violations.append(RuleViolation(
             code="CONSECUTIVE_LOSSES",
-            message=f"{req.consecutive_losses} убыточные сделки подряд — пауза обязательна.",
+            message=f"{req.consecutive_losses} losing trades in a row — a break is mandatory.",
         ))
 
     text_blob = " ".join(filter(None, [req.reason, req.emotion, req.setup]))
     if detect_revenge_trading(text_blob):
         violations.append(RuleViolation(
             code="REVENGE_TRADING",
-            message="Обнаружены признаки revenge trading — желания отыграться.",
+            message="Signs of revenge trading detected — trying to win losses back.",
         ))
 
     if detect_bad_emotion(req.emotion):
         violations.append(RuleViolation(
             code="BAD_EMOTION",
-            message="Эмоциональное состояние не подходит для торговли "
-                    "(злость / паника / жадность / FOMO).",
+            message="Emotional state is not suitable for trading "
+                    "(anger / panic / greed / FOMO).",
         ))
 
     return violations

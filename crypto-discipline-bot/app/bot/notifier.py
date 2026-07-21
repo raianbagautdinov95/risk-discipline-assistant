@@ -26,12 +26,12 @@ def _format(s: dict) -> str:
     rr = s.get("risk_reward")
     pct = conf if (isinstance(conf, (int, float)) and conf > 1) else (conf or 0) * 100
     return (
-        f"📡 НОВЫЙ СИГНАЛ\n"
+        f"📡 NEW SIGNAL\n"
         f"{arrow}  {sym}\n"
         f"  entry: {s.get('entry')}   SL: {s.get('stop_loss')}   "
         f"TP: {s.get('take_profit')}\n"
         f"  R:R={rr:.2f}   confidence={pct:.0f}%   "
-        f"тренд 1H: {s.get('trend_1h','?')}\n"
+        f"1H trend: {s.get('trend_1h','?')}\n"
         f"  • " + " · ".join((s.get('reasons') or [])[:3])
     )
 

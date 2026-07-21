@@ -1,11 +1,11 @@
-"""Трекер исходов живых сигналов.
+"""Outcome tracker for live signals.
 
-Идея: каждый раз, когда бот делает скан, мы проверяем ранее выданные сигналы,
-которые ещё OPEN. По каждому смотрим последние свечи и отмечаем: сработал TP,
-сработал SL или сигнал ещё не закрылся.
+Idea: every time the bot runs a scan, we check previously issued signals that
+are still OPEN. For each one we look at the latest candles and mark whether TP
+was hit, SL was hit, or the signal hasn't closed yet.
 
-Итог — файл `reports/signals_tracked.json` с реальной статистикой бота:
-сколько сигналов отработало, какой win rate, какой profit factor.
+The result is a `reports/signals_tracked.json` file with the bot's real
+statistics: how many signals played out, the win rate, and the profit factor.
 """
 import json
 from pathlib import Path
@@ -31,11 +31,12 @@ class _NumpyAwareEncoder(json.JSONEncoder):
 
 
 class SignalTracker:
-    """Хранит сигналы с их статусом: OPEN, WIN, LOSS, EXPIRED.
-    При каждом update_open_signals() проверяет цены и закрывает те, где TP/SL пробит.
+    """Stores signals with their status: OPEN, WIN, LOSS, EXPIRED.
+    On each update_open_signals() call it checks prices and closes those where
+    TP/SL has been breached.
     """
 
-    # Максимальное время жизни сигнала — по истечении считаем EXPIRED.
+    # Maximum lifetime of a signal — once it expires we mark it EXPIRED.
     DEFAULT_TTL_HOURS = 12
 
     def __init__(self, reports_dir: str = "reports", market: Optional[MarketData] = None,
@@ -47,7 +48,7 @@ class SignalTracker:
         self.entry_tf = entry_timeframe
 
     # ------------------------------------------------------------------ #
-    # Хранилище                                                          #
+    # Storage                                                            #
     # ------------------------------------------------------------------ #
 
     def _load(self) -> List[Dict[str, Any]]:
@@ -59,7 +60,7 @@ class SignalTracker:
             return []
 
     def _save(self, data: List[Dict[str, Any]]) -> None:
-        # Не храним больше 2000 записей.
+        # Keep at most 2000 records.
         data = data[-2000:]
         self.file.write_text(
             json.dumps(data, indent=2, ensure_ascii=False, cls=_NumpyAwareEncoder),
@@ -71,17 +72,17 @@ class SignalTracker:
     # ------------------------------------------------------------------ #
 
     def add_signal(self, signal: Dict[str, Any]) -> None:
-        """Регистрирует новый сигнал как OPEN."""
+        """Registers a new signal as OPEN."""
         if signal.get("action") == "HOLD":
             return
-        # Дедупликация: если у нас уже есть активный сигнал по этому символу
-        # с тем же действием — не добавляем (скорее всего одна и та же ситуация).
+        # Deduplication: if we already have an active signal for this symbol
+        # with the same action, don't add it (most likely the same situation).
         data = self._load()
         for s in data:
             if (s["symbol"] == signal["symbol"]
                     and s.get("status") == "OPEN"
                     and s["action"] == signal["action"]):
-                # Похожий открытый сигнал уже есть.
+                # A similar open signal already exists.
                 return
 
         entry = {
@@ -105,8 +106,9 @@ class SignalTracker:
         self._save(data)
 
     def update_open_signals(self, ttl_hours: int = DEFAULT_TTL_HOURS) -> Dict[str, int]:
-        """Обходит все OPEN сигналы, тянет свежие свечи и закрывает те, где
-        TP/SL пробит или истёк TTL. Возвращает сводку изменений."""
+        """Iterates over all OPEN signals, pulls fresh candles and closes those
+        where TP/SL has been breached or the TTL has expired. Returns a summary
+        of the changes."""
         data = self._load()
         changes = {"closed_win": 0, "closed_loss": 0, "expired": 0, "still_open": 0}
 
@@ -116,7 +118,7 @@ class SignalTracker:
             if s.get("status") != "OPEN":
                 continue
 
-            # TTL: если сигнал старше ttl_hours — закрываем как EXPIRED.
+            # TTL: if the signal is older than ttl_hours, close it as EXPIRED.
             age_sec = now_ts - int(s["signal_timestamp"])
             if age_sec > ttl_hours * 3600:
                 s["status"] = "EXPIRED"
@@ -125,13 +127,13 @@ class SignalTracker:
                 changes["expired"] += 1
                 continue
 
-            # Тянем свечи с момента сигнала.
+            # Pull candles since the signal was issued.
             candles = self.market.get_candles(s["symbol"], self.entry_tf, limit=100)
             if candles is None:
                 changes["still_open"] += 1
                 continue
 
-            # Только свечи после сигнала.
+            # Only candles after the signal.
             future = candles[candles["timestamp"] > s["signal_timestamp"] * 1000].reset_index(drop=True)
             if len(future) == 0:
                 changes["still_open"] += 1
@@ -154,13 +156,13 @@ class SignalTracker:
         return changes
 
     def close_early(self, symbol: str, opposite_action: str, current_price: float,
-                    reason: str = "Противоположный сигнал от бота") -> int:
-        """Закрывает все OPEN позиции по символу, если появился противоположный
-        сигнал. Возвращает количество закрытых позиций.
+                    reason: str = "Opposite signal from the bot") -> int:
+        """Closes all OPEN positions for a symbol when an opposite signal
+        appears. Returns the number of positions closed.
 
-        opposite_action — действие нового сигнала ('BUY' или 'SELL'). Закрываем
-        позиции, ЧЬЁ направление противоположно новому сигналу (т.е. если новый
-        сигнал SELL, закрываем открытые BUY).
+        opposite_action — the action of the new signal ('BUY' or 'SELL'). We
+        close positions WHOSE direction is opposite to the new signal (i.e. if
+        the new signal is SELL, we close open BUYs).
         """
         closing_action = "BUY" if opposite_action == "SELL" else "SELL"
         data = self._load()
@@ -169,7 +171,7 @@ class SignalTracker:
             if (s.get("status") == "OPEN"
                     and s["symbol"] == symbol
                     and s["action"] == closing_action):
-                # Считаем PnL в R по текущей цене.
+                # Compute PnL in R at the current price.
                 risk = abs(s["entry"] - s["stop_loss"])
                 if risk <= 0:
                     continue
@@ -191,12 +193,12 @@ class SignalTracker:
         return closed
 
     def summary(self, since_seconds: Optional[int] = None) -> Dict[str, Any]:
-        """Сводка по всей накопленной статистике.
-        since_seconds — если задан, берём только сигналы, закрытые за последние N секунд.
+        """Summary of all accumulated statistics.
+        since_seconds — if given, take only signals closed within the last N seconds.
         """
         data = self._load()
         if not data:
-            return {"total": 0, "message": "Пока нет данных"}
+            return {"total": 0, "message": "No data yet"}
 
         if since_seconds is not None:
             cutoff = datetime.now(timezone.utc).timestamp() - since_seconds
@@ -225,7 +227,7 @@ class SignalTracker:
         gross_loss = sum(s.get("pnl_r") or 0 for s in losses)
         profit_factor = (gross_win / abs(gross_loss)) if gross_loss != 0 else None
 
-        # По каждому символу.
+        # Per symbol.
         by_symbol: Dict[str, Dict[str, int]] = {}
         for s in data:
             sym = s["symbol"]
@@ -252,7 +254,7 @@ class SignalTracker:
     # ------------------------------------------------------------------ #
 
     def _check_outcome(self, s: Dict[str, Any], future_df):
-        """Проверяет, пробит ли TP/SL в future_df. Возвращает (outcome, pnl_r, bars)."""
+        """Checks whether TP/SL has been breached in future_df. Returns (outcome, pnl_r, bars)."""
         risk = abs(s["entry"] - s["stop_loss"])
         if risk <= 0:
             return "OPEN", None, 0
@@ -268,7 +270,7 @@ class SignalTracker:
                 tp_hit = low <= s["take_profit"]
 
             if sl_hit and tp_hit:
-                # Пессимистично — стоп первым.
+                # Pessimistically — stop first.
                 return "LOSS", -1.0, bar_idx
             if sl_hit:
                 return "LOSS", -1.0, bar_idx

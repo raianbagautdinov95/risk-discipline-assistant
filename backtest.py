@@ -1,17 +1,17 @@
-"""Бэктестер сигнальной стратегии.
+"""Backtester for the signal strategy.
 
-Принцип работы (walk-forward симуляция):
-1. Скачивается большой объём исторических свечей (через пагинацию).
-2. Индикаторы считаются ОДИН раз на всю историю — это корректно, т.к.
-   индикаторы типа RSI/MACD используют только прошлые значения.
-3. Идём по истории свеча за свечой. В каждый момент времени имеем
-   snapshot индикаторов только для прошлых свечей (slice до текущей).
-4. Движок выдаёт сигнал → мы смотрим, что случилось в следующих
-   candles_ahead свечах: сработал ли TP или SL первым.
-5. Агрегируем: win rate, profit factor, средний R:R, max drawdown.
+How it works (walk-forward simulation):
+1. A large volume of historical candles is downloaded (via pagination).
+2. Indicators are computed ONCE over the entire history — this is correct, since
+   indicators like RSI/MACD only use past values.
+3. We walk through the history candle by candle. At each point in time we have
+   an indicator snapshot for past candles only (a slice up to the current one).
+4. The engine emits a signal → we look at what happened in the next
+   candles_ahead candles: whether TP or SL triggered first.
+5. We aggregate: win rate, profit factor, average R:R, max drawdown.
 
-Запуск:
-    python backtest.py                        — тест BTC-USDT, 15m, ~21 день
+Usage:
+    python backtest.py                        — test BTC-USDT, 15m, ~21 days
     python backtest.py --symbol ETH-USDT
     python backtest.py --symbol BTC-USDT --candles 3000 --lookahead 48
 """
@@ -42,7 +42,7 @@ class TradeResult:
     take_profit: float
     confidence: float
     outcome: str  # WIN | LOSS | OPEN
-    pnl_r: float  # прибыль/убыток в единицах риска (R)
+    pnl_r: float  # profit/loss in units of risk (R)
     bars_to_exit: int
 
 
@@ -85,8 +85,8 @@ class BacktestReport:
 class Backtester:
     def __init__(self, candles_on_15m: int = 2000, lookahead_bars: int = 48):
         """
-        candles_on_15m — сколько 15m свечей тянем для теста (2000 ≈ 3 недели, 8000 ≈ 3 месяца).
-        lookahead_bars — сколько свечей после сигнала ждать исхода (48 x 15m = 12 часов).
+        candles_on_15m — how many 15m candles to pull for the test (2000 ≈ 3 weeks, 8000 ≈ 3 months).
+        lookahead_bars — how many candles after a signal to wait for the outcome (48 x 15m = 12 hours).
         """
         self.candles_on_15m = candles_on_15m
         self.lookahead = lookahead_bars
@@ -96,8 +96,8 @@ class Backtester:
         self.engine = SignalEngine(self.cfg, self.risk)
 
     def run(self, symbol: str) -> BacktestReport:
-        print(f"[backtest] Качаем данные для {symbol}...")
-        # Соотношение: 15m → 1H = 4x меньше свечей, 4H = 16x меньше.
+        print(f"[backtest] Fetching data for {symbol}...")
+        # Ratio: 15m → 1H = 4x fewer candles, 4H = 16x fewer.
         entry_df = self.market.get_historical_candles(
             symbol, self.cfg.entry_timeframe, self.candles_on_15m
         )
@@ -111,12 +111,12 @@ class Backtester:
             )
 
         if entry_df is None or trend_df is None:
-            raise RuntimeError("Не удалось получить исторические данные")
+            raise RuntimeError("Failed to fetch historical data")
 
-        print(f"[backtest] Получено: 15m={len(entry_df)}, 1H={len(trend_df)}, "
-              f"4H={len(htf_df) if htf_df is not None else 'выкл'}")
+        print(f"[backtest] Received: 15m={len(entry_df)}, 1H={len(trend_df)}, "
+              f"4H={len(htf_df) if htf_df is not None else 'off'}")
 
-        # Считаем индикаторы один раз на всей истории.
+        # Compute indicators once over the entire history.
         entry_full = compute_indicators(entry_df, self.cfg.atr_period)
         trend_full = compute_indicators(trend_df, self.cfg.atr_period)
         htf_full = compute_indicators(htf_df, self.cfg.atr_period) if htf_df is not None else None
@@ -127,14 +127,14 @@ class Backtester:
             period_end=str(entry_full["datetime"].iloc[-1]),
         )
 
-        min_history = 200  # нужно для 200-EMA и стабильных индикаторов
-        # По каждой 15m свече после прогрева — проверяем наличие сигнала.
+        min_history = 200  # needed for the 200-EMA and stable indicators
+        # For each 15m candle after warm-up — check whether there's a signal.
         for i in range(min_history, len(entry_full) - self.lookahead):
-            # Срезы до i-й свечи включительно — чтобы симулировать реальный момент.
+            # Slices up to and including the i-th candle — to simulate the real moment.
             entry_slice = entry_full.iloc[: i + 1]
             entry_ts = entry_slice["timestamp"].iloc[-1]
 
-            # Находим 1H и 4H срезы, которые БЫЛИ ЗАКРЫТЫ на момент entry_ts.
+            # Find the 1H and 4H slices that WERE CLOSED as of entry_ts.
             trend_slice = trend_full[trend_full["timestamp"] <= entry_ts]
             if len(trend_slice) < 50:
                 continue
@@ -151,7 +151,7 @@ class Backtester:
             if signal.action == "HOLD":
                 continue
 
-            # Симулируем исход по следующим свечам.
+            # Simulate the outcome over the following candles.
             future = entry_full.iloc[i + 1: i + 1 + self.lookahead]
             outcome, pnl_r, bars = self._simulate_outcome(signal, future)
 
@@ -169,13 +169,13 @@ class Backtester:
                 report.total_r += pnl_r
             elif outcome == "LOSS":
                 report.losses += 1
-                report.gross_loss_r += pnl_r  # отрицательное число
+                report.gross_loss_r += pnl_r  # negative number
                 report.total_r += pnl_r
             else:
                 report.open_at_end += 1
 
-            # Обновляем max drawdown.
-            # Считаем equity curve и максимальную просадку.
+            # Update max drawdown.
+            # Compute the equity curve and the maximum drawdown.
         if report.trades:
             equity = 0.0
             peak = 0.0
@@ -190,8 +190,8 @@ class Backtester:
         return report
 
     def _simulate_outcome(self, signal, future_df: pd.DataFrame):
-        """Проверяет, что случилось первым: TP или SL.
-        Возвращает (outcome, pnl_r, bars_to_exit)."""
+        """Checks what happened first: TP or SL.
+        Returns (outcome, pnl_r, bars_to_exit)."""
         if len(future_df) == 0:
             return "OPEN", 0.0, 0
         risk = abs(signal.entry - signal.stop_loss)
@@ -204,15 +204,15 @@ class Backtester:
             high, low = row["high"], row["low"]
 
             if is_long:
-                # SL может сработать, если low опустился ниже стопа.
+                # SL can trigger if the low dropped below the stop.
                 sl_hit = low <= signal.stop_loss
                 tp_hit = high >= signal.take_profit
             else:  # SHORT
                 sl_hit = high >= signal.stop_loss
                 tp_hit = low <= signal.take_profit
 
-            # Если в ОДНОЙ свече пересечены оба уровня — считаем пессимистично: SL сработал первым.
-            # Это реалистично, т.к. мы не знаем внутрисвечной траектории.
+            # If both levels are crossed within ONE candle — we assume pessimistically: SL triggered first.
+            # This is realistic, since we don't know the intra-candle trajectory.
             if sl_hit and tp_hit:
                 return "LOSS", -1.0, bar_idx
             if sl_hit:
@@ -225,14 +225,14 @@ class Backtester:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Бэктест сигнальной стратегии")
-    parser.add_argument("--symbol", default="BTC-USDT", help="Торговая пара")
+    parser = argparse.ArgumentParser(description="Backtest the signal strategy")
+    parser.add_argument("--symbol", default="BTC-USDT", help="Trading pair")
     parser.add_argument("--candles", type=int, default=2000,
-                        help="Сколько 15m свечей тянуть (2000 ≈ 3 недели, 8000 ≈ 3 месяца)")
+                        help="How many 15m candles to pull (2000 ≈ 3 weeks, 8000 ≈ 3 months)")
     parser.add_argument("--lookahead", type=int, default=48,
-                        help="Макс. свечей ожидания исхода сигнала (48 = 12 ч)")
+                        help="Max candles to wait for the signal outcome (48 = 12 h)")
     parser.add_argument("--all", action="store_true",
-                        help="Прогнать по всем символам из config.settings")
+                        help="Run over all symbols from config.settings")
     args = parser.parse_args()
 
     load_dotenv()
@@ -248,22 +248,22 @@ def main():
             s = report.summary()
             print()
             print("=" * 60)
-            print(f"  Бэктест: {s['symbol']}")
-            print(f"  Период:  {s['period']}")
+            print(f"  Backtest: {s['symbol']}")
+            print(f"  Period:   {s['period']}")
             print("=" * 60)
-            print(f"  Сигналов всего:    {s['total_signals']}")
-            print(f"  Закрыто:           {s['closed']} (WIN: {s['wins']}, LOSS: {s['losses']})")
-            print(f"  Открыто на конце:  {s['open_at_end']}")
+            print(f"  Total signals:     {s['total_signals']}")
+            print(f"  Closed:            {s['closed']} (WIN: {s['wins']}, LOSS: {s['losses']})")
+            print(f"  Open at end:       {s['open_at_end']}")
             print(f"  Win rate:          {s['win_rate_pct']}%")
-            print(f"  Средний R:         {s['avg_r_per_trade']}")
+            print(f"  Average R:         {s['avg_r_per_trade']}")
             print(f"  Profit factor:     {s['profit_factor']}")
-            print(f"  Общий результат:   {s['total_r']} R")
+            print(f"  Overall result:    {s['total_r']} R")
             print(f"  Max drawdown:      {s['max_drawdown_r']} R")
             all_reports.append(s)
         except Exception as e:
-            print(f"[backtest] Ошибка для {sym}: {e}")
+            print(f"[backtest] Error for {sym}: {e}")
 
-    # Агрегированный результат по всем.
+    # Aggregated result across all.
     if len(all_reports) > 1:
         total_sig = sum(r["total_signals"] for r in all_reports)
         total_wins = sum(r["wins"] for r in all_reports)
@@ -273,11 +273,11 @@ def main():
         wr = (total_wins / closed * 100) if closed else 0
         print()
         print("=" * 60)
-        print("  ИТОГО ПО ВСЕМ СИМВОЛАМ")
+        print("  TOTAL ACROSS ALL SYMBOLS")
         print("=" * 60)
-        print(f"  Сигналов:     {total_sig}")
+        print(f"  Signals:      {total_sig}")
         print(f"  Win rate:     {wr:.1f}% ({total_wins}/{closed})")
-        print(f"  Общий P&L:    {total_r:.2f} R")
+        print(f"  Total P&L:    {total_r:.2f} R")
 
 
 if __name__ == "__main__":

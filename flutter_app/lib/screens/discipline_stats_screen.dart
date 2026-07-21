@@ -89,8 +89,8 @@ class _DisciplineStatsScreenState extends State<DisciplineStatsScreen> {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Text(
-                'Правый клик по картинке → "Сохранить изображение".\n'
-                'Постни в Twitter / Telegram-канал — продвигаешь продукт + мотивируешь себя.',
+                'Right-click the image → "Save image".\n'
+                'Post it to Twitter or your Telegram channel — promote the product and motivate yourself.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
               ),
@@ -206,7 +206,7 @@ class _DisciplineStatsScreenState extends State<DisciplineStatsScreen> {
     final spots = _equityCurve();
     if (spots.length <= 1) {
       return _emptyChart(
-          'Закрой хотя бы одну сделку с P&L,\nчтобы появилась кривая капитала.');
+          'Close at least one trade with P&L\nto see the equity curve.');
     }
     final last = spots.last.y;
     final color = last >= 0 ? AppColors.success : AppColors.danger;
@@ -231,7 +231,7 @@ class _DisciplineStatsScreenState extends State<DisciplineStatsScreen> {
                     style: TextStyle(
                         fontWeight: FontWeight.w600, fontSize: 14)),
                 const SizedBox(width: 8),
-                const Text('накопленный P&L',
+                const Text('cumulative P&L',
                     style: TextStyle(
                         color: AppColors.textMuted, fontSize: 11)),
                 const Spacer(),
@@ -315,7 +315,7 @@ class _DisciplineStatsScreenState extends State<DisciplineStatsScreen> {
     final data = _winRateByDay();
     final hasAny = data.any((e) => e.value > 0);
     if (!hasAny) {
-      return _emptyChart('Закрытых сделок за неделю нет — график пуст.');
+      return _emptyChart('No closed trades this week — chart is empty.');
     }
     return Card(
       child: Padding(
@@ -334,10 +334,10 @@ class _DisciplineStatsScreenState extends State<DisciplineStatsScreen> {
                     size: 16, color: AppColors.primary),
               ),
               const SizedBox(width: 10),
-              const Text('Win-rate по дням',
+              const Text('Win-rate by day',
                   style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
               const SizedBox(width: 8),
-              const Text('последние 7 дней',
+              const Text('last 7 days',
                   style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
             ]),
             const SizedBox(height: 16),
@@ -455,7 +455,7 @@ class _DisciplineStatsScreenState extends State<DisciplineStatsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _demo ? 'Демо-режим включён' : 'Реальные данные',
+                  _demo ? 'Demo mode enabled' : 'Live data',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: _demo ? Colors.indigo : null,
@@ -463,8 +463,8 @@ class _DisciplineStatsScreenState extends State<DisciplineStatsScreen> {
                 ),
                 Text(
                   _demo
-                      ? '30 фейковых сделок — посмотреть как выглядит готовый продукт'
-                      : 'Из твоего журнала. Включи демо чтобы увидеть полный экран',
+                      ? '30 sample trades — see what the finished product looks like'
+                      : 'From your journal. Turn on demo to see the full screen',
                   style: const TextStyle(fontSize: 11, color: Colors.grey),
                 ),
               ],
@@ -495,7 +495,7 @@ class _DisciplineStatsScreenState extends State<DisciplineStatsScreen> {
                   const SizedBox(height: 8),
                   Text(_error!, textAlign: TextAlign.center),
                   const SizedBox(height: 12),
-                  FilledButton(onPressed: _load, child: const Text('Повторить')),
+                  FilledButton(onPressed: _load, child: const Text('Retry')),
                 ],
               ),
             ),
@@ -511,8 +511,8 @@ class _DisciplineStatsScreenState extends State<DisciplineStatsScreen> {
             child: Padding(
               padding: EdgeInsets.all(24),
               child: Text(
-                'Перейди во вкладку "Настройки" и укажи Telegram ID.\n'
-                'Или включи "Демо" сверху, чтобы увидеть как выглядит экран.',
+                'Go to the "Settings" tab and enter your Telegram ID.\n'
+                'Or turn on "Demo" above to see how the screen looks.',
                 textAlign: TextAlign.center,
               ),
             ),
@@ -529,8 +529,8 @@ class _DisciplineStatsScreenState extends State<DisciplineStatsScreen> {
             child: Padding(
               padding: EdgeInsets.all(24),
               child: Text(
-                'Нет данных. Сначала проверь хотя бы одну сделку.\n'
-                'Или включи "Демо" сверху.',
+                'No data yet. Check at least one trade first.\n'
+                'Or turn on "Demo" above.',
                 textAlign: TextAlign.center,
               ),
             ),
@@ -559,7 +559,7 @@ class _DisciplineStatsScreenState extends State<DisciplineStatsScreen> {
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Это синтетические данные. Выключи Демо чтобы вернуться к реальным.',
+                    'This is synthetic data. Turn off Demo to return to live data.',
                     style: TextStyle(fontSize: 12),
                   ),
                 ),
@@ -570,7 +570,7 @@ class _DisciplineStatsScreenState extends State<DisciplineStatsScreen> {
             child: OutlinedButton.icon(
               onPressed: () => _openShareCard(context),
               icon: const Icon(Icons.ios_share),
-              label: const Text('Поделиться equity curve'),
+              label: const Text('Share equity curve'),
             ),
           ),
           const SizedBox(height: 4),
@@ -579,13 +579,13 @@ class _DisciplineStatsScreenState extends State<DisciplineStatsScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Column(children: [
           Row(children: [
-            _bigTile('Всего проверок', s.total, AppColors.info,
+            _bigTile('Total checks', s.total, AppColors.info,
                 Icons.format_list_numbered),
-            _bigTile('Разрешено', s.allowed, AppColors.success,
+            _bigTile('Allowed', s.allowed, AppColors.success,
                 Icons.check_circle_outline),
           ]),
           Row(children: [
-            _bigTile('Запрещено', s.forbidden, AppColors.danger, Icons.block),
+            _bigTile('Forbidden', s.forbidden, AppColors.danger, Icons.block),
             _bigTile(
               'Win-rate',
               s.winRatePct,
@@ -596,7 +596,7 @@ class _DisciplineStatsScreenState extends State<DisciplineStatsScreen> {
             ),
           ]),
           Row(children: [
-            _bigTile('Закрытых', s.closed, AppColors.textSecondary,
+            _bigTile('Closed', s.closed, AppColors.textSecondary,
                 Icons.task_alt),
             _bigTile(
               'P&L total',
@@ -627,7 +627,7 @@ class _DisciplineStatsScreenState extends State<DisciplineStatsScreen> {
                           size: 16, color: AppColors.success),
                     ),
                     const SizedBox(width: 10),
-                    const Text('Дисциплина',
+                    const Text('Discipline',
                         style: TextStyle(
                             fontWeight: FontWeight.w600, fontSize: 14)),
                     const Spacer(),
@@ -650,13 +650,13 @@ class _DisciplineStatsScreenState extends State<DisciplineStatsScreen> {
                     spacing: 16,
                     runSpacing: 4,
                     children: [
-                      _miniMetric(Icons.trending_up, 'Средний R:R',
+                      _miniMetric(Icons.trending_up, 'Avg R:R',
                           s.avgRr.toString(), AppColors.info),
-                      _miniMetric(Icons.percent, 'Средний риск',
+                      _miniMetric(Icons.percent, 'Avg risk',
                           '${s.avgRisk}%', AppColors.warn),
                       _miniMetric(
                           Icons.show_chart,
-                          'Avg P&L закрытых',
+                          'Avg P&L closed',
                           '${s.avgPnlPercent >= 0 ? '+' : ''}'
                               '${s.avgPnlPercent.toStringAsFixed(2)}%',
                           s.avgPnlPercent >= 0
@@ -695,7 +695,7 @@ class _DisciplineStatsScreenState extends State<DisciplineStatsScreen> {
                             size: 16, color: AppColors.danger),
                       ),
                       const SizedBox(width: 10),
-                      const Text('Частые причины запрета',
+                      const Text('Common reasons for blocking',
                           style: TextStyle(
                               fontWeight: FontWeight.w600, fontSize: 14)),
                     ]),
@@ -750,8 +750,8 @@ class _DisciplineStatsScreenState extends State<DisciplineStatsScreen> {
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: Text(
-              '⚠️ Это не финансовая рекомендация. Бот помогает контролировать '
-              'риск и дисциплину.',
+              '⚠️ This is not financial advice. The bot helps you manage '
+              'risk and discipline.',
               style: TextStyle(
                   fontSize: 12,
                   fontStyle: FontStyle.italic,

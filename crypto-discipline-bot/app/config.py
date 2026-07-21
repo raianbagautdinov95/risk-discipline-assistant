@@ -1,4 +1,5 @@
 from functools import lru_cache
+from urllib.parse import quote
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -13,8 +14,19 @@ class Settings(BaseSettings):
 
     bot_token: str = Field(..., alias="BOT_TOKEN")
 
-    database_url: str = Field(..., alias="DATABASE_URL")
-    alembic_database_url: str = Field(..., alias="ALEMBIC_DATABASE_URL")
+    # Postgres credentials — the single source of truth for the DB connection.
+    # The async and Alembic URLs are derived from these (see properties below),
+    # so the password is defined in exactly one place.
+    postgres_user: str = Field("crypto_bot", alias="POSTGRES_USER")
+    postgres_password: str = Field("change_me_strong_password", alias="POSTGRES_PASSWORD")
+    postgres_db: str = Field("crypto_discipline", alias="POSTGRES_DB")
+    postgres_host: str = Field("db", alias="POSTGRES_HOST")
+    postgres_port: int = Field(5432, alias="POSTGRES_PORT")
+
+    # Optional full-URL overrides. Leave empty to build the URLs from the
+    # POSTGRES_* fields above; set them only for a non-standard connection.
+    database_url_override: str = Field("", alias="DATABASE_URL")
+    alembic_database_url_override: str = Field("", alias="ALEMBIC_DATABASE_URL")
 
     openai_api_key: str = Field("", alias="OPENAI_API_KEY")
     openai_model: str = Field("gpt-4o-mini", alias="OPENAI_MODEL")
@@ -39,6 +51,23 @@ class Settings(BaseSettings):
     default_daily_loss_limit: float = Field(2.0, alias="DEFAULT_DAILY_LOSS_LIMIT")
 
     log_level: str = Field("INFO", alias="LOG_LEVEL")
+
+    def _dsn(self, driver: str) -> str:
+        password = quote(self.postgres_password, safe="")
+        return (
+            f"postgresql+{driver}://{self.postgres_user}:{password}"
+            f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+        )
+
+    @property
+    def database_url(self) -> str:
+        """Async SQLAlchemy DSN (asyncpg), or the explicit override if set."""
+        return self.database_url_override or self._dsn("asyncpg")
+
+    @property
+    def alembic_database_url(self) -> str:
+        """Sync DSN for Alembic (psycopg2), or the explicit override if set."""
+        return self.alembic_database_url_override or self._dsn("psycopg2")
 
 
 @lru_cache

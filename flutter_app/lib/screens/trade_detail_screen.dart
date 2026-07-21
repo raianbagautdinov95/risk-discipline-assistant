@@ -40,7 +40,7 @@ class TradeDetailScreen extends StatelessWidget {
         'LOSS' => '❌ LOSS',
         'BREAKEVEN' => '⚖️ BREAKEVEN',
         'CANCELED' => '🚫 CANCELED',
-        _ => '⏳ Открыта',
+        _ => '⏳ Open',
       };
 
   void _repeat(BuildContext context) {
@@ -65,14 +65,14 @@ class TradeDetailScreen extends StatelessWidget {
       await ApiService().closeTrade(telegramId, trade.id, result);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Сделка #${trade.id}: ${result.outcome}')),
+        SnackBar(content: Text('Trade #${trade.id}: ${result.outcome}')),
       );
       Navigator.of(context).pop();
       onClosed?.call();
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка: $e')),
+        SnackBar(content: Text('Error: $e')),
       );
     }
   }
@@ -199,7 +199,7 @@ class TradeDetailScreen extends StatelessWidget {
           _section(
             header: const SectionHeader(
               icon: Icons.show_chart,
-              title: 'Цены',
+              title: 'Prices',
               color: AppColors.info,
             ),
             child: Wrap(spacing: 8, runSpacing: 8, children: [
@@ -243,22 +243,22 @@ class TradeDetailScreen extends StatelessWidget {
           _section(
             header: const SectionHeader(
               icon: Icons.shield,
-              title: 'Риск',
+              title: 'Risk',
               color: AppColors.warn,
             ),
             child: Wrap(spacing: 8, runSpacing: 8, children: [
               PricePill(
-                label: 'Депозит',
+                label: 'Deposit',
                 value: '${t.deposit.toStringAsFixed(2)} \$',
                 color: AppColors.success,
               ),
               PricePill(
-                label: 'Риск',
+                label: 'Risk',
                 value: '${t.riskPercent}%',
                 color: AppColors.warn,
               ),
               PricePill(
-                label: 'Плечо',
+                label: 'Leverage',
                 value: 'x${t.leverage}',
                 color: t.leverage > 5 ? AppColors.danger : AppColors.info,
               ),
@@ -271,18 +271,18 @@ class TradeDetailScreen extends StatelessWidget {
             _section(
               header: const SectionHeader(
                 icon: Icons.psychology,
-                title: 'Психология и сетап',
+                title: 'Psychology and setup',
                 color: AppColors.primary,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if ((t.reason ?? '').isNotEmpty)
-                    _meta('Причина', t.reason!),
+                    _meta('Reason', t.reason!),
                   if ((t.setup ?? '').isNotEmpty)
-                    _meta('Сетап', t.setup!),
+                    _meta('Setup', t.setup!),
                   if ((t.emotion ?? '').isNotEmpty)
-                    _meta('Эмоция', t.emotion!),
+                    _meta('Emotion', t.emotion!),
                 ],
               ),
             ),
@@ -291,7 +291,7 @@ class TradeDetailScreen extends StatelessWidget {
             _section(
               header: const SectionHeader(
                 icon: Icons.warning_rounded,
-                title: 'Нарушения правил',
+                title: 'Rule violations',
                 color: AppColors.danger,
               ),
               child: Column(
@@ -337,7 +337,7 @@ class TradeDetailScreen extends StatelessWidget {
             _section(
               header: const SectionHeader(
                 icon: Icons.sticky_note_2,
-                title: 'Заметки',
+                title: 'Notes',
                 color: AppColors.info,
               ),
               child: Text(t.notes!),
@@ -359,7 +359,7 @@ class TradeDetailScreen extends StatelessWidget {
                 ),
                 onPressed: () => _repeat(context),
                 icon: const Icon(Icons.replay, size: 18),
-                label: const Text('Повторить'),
+                label: const Text('Repeat'),
               ),
             ),
             const SizedBox(width: 10),
@@ -375,7 +375,7 @@ class TradeDetailScreen extends StatelessWidget {
                     ? null
                     : () => _showCloseDialog(context),
                 icon: const Icon(Icons.task_alt, size: 18),
-                label: Text(t.isClosed ? 'Уже закрыта' : 'Закрыть сделку'),
+                label: Text(t.isClosed ? 'Already closed' : 'Close trade'),
               ),
             ),
           ]),
@@ -433,13 +433,13 @@ class _CloseTradeDialogState extends State<_CloseTradeDialog> {
   Widget build(BuildContext context) {
     final t = widget.trade;
     return AlertDialog(
-      title: Text('Закрыть #${t.id}  ${t.pair}'),
+      title: Text('Close #${t.id}  ${t.pair}'),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Исход:',
+            const Text('Outcome:',
                 style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
             Wrap(
@@ -456,21 +456,21 @@ class _CloseTradeDialogState extends State<_CloseTradeDialog> {
               controller: _pnl,
               keyboardType: TextInputType.number,
               decoration:
-                  const InputDecoration(labelText: 'P&L, % (опционально)'),
+                  const InputDecoration(labelText: 'P&L, % (optional)'),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _exit,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
-                  labelText: 'Цена выхода (опционально)'),
+                  labelText: 'Exit price (optional)'),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _notes,
               maxLines: 2,
               decoration: const InputDecoration(
-                  labelText: 'Заметки (опционально)'),
+                  labelText: 'Notes (optional)'),
             ),
           ],
         ),
@@ -478,7 +478,7 @@ class _CloseTradeDialogState extends State<_CloseTradeDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Отмена'),
+          child: const Text('Cancel'),
         ),
         FilledButton(
           onPressed: () {
@@ -498,7 +498,7 @@ class _CloseTradeDialogState extends State<_CloseTradeDialog> {
               ),
             );
           },
-          child: const Text('Сохранить'),
+          child: const Text('Save'),
         ),
       ],
     );

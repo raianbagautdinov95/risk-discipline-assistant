@@ -13,14 +13,14 @@ from app.services.ai_coach import AICoach
 from app.services.ai_risk_officer import AIRiskOfficer
 
 DISCLAIMER = (
-    "Это не финансовая рекомендация. Бот помогает контролировать риск "
-    "и дисциплину. Решение и ответственность — за тобой."
+    "This is not financial advice. The bot helps you control risk "
+    "and discipline. The decision and responsibility are yours."
 )
 
 DECISION_LABELS = {
-    "ALLOWED": "РАЗРЕШЕНО",
-    "FORBIDDEN": "ЗАПРЕЩЕНО",
-    "WAIT": "ЖДАТЬ",
+    "ALLOWED": "ALLOWED",
+    "FORBIDDEN": "FORBIDDEN",
+    "WAIT": "WAIT",
 }
 
 
@@ -65,18 +65,18 @@ def _format_message(
 ) -> str:
     label = DECISION_LABELS.get(decision, decision)
     lines: list[str] = [
-        f"РЕШЕНИЕ: {label}",
-        f"Оценка сделки: {score}/10",
+        f"DECISION: {label}",
+        f"Trade score: {score}/10",
         "",
-        "Расчёты:",
-        f"• риск в деньгах: {calc.risk_money}",
-        f"• риск в %: {req.risk_percent}%",
+        "Calculations:",
+        f"• risk in money: {calc.risk_money}",
+        f"• risk in %: {req.risk_percent}%",
         f"• R:R: {calc.rr_ratio if calc.rr_ratio is not None else '—'}",
-        f"• плечо: x{req.leverage}{' (КРИТИЧНО)' if calc.leverage_critical else ''}",
-        f"• размер позиции: "
+        f"• leverage: x{req.leverage}{' (CRITICAL)' if calc.leverage_critical else ''}",
+        f"• position size: "
         f"{calc.position_size if calc.position_size is not None else '—'}",
         "",
-        "Причины решения:",
+        "Reasons:",
     ]
 
     if violations:
@@ -86,19 +86,19 @@ def _format_message(
         for i, msg in enumerate(officer.violations, 1):
             lines.append(f"{i}. {msg}")
     else:
-        lines.append("1. Жёстких нарушений правил не обнаружено.")
+        lines.append("1. No hard rule violations found.")
     lines.append("")
 
-    lines.append("Дисциплина:")
+    lines.append("Discipline:")
     if officer:
         lines.append(f"• Risk Officer: {officer.summary}")
     if coach:
         cons = "; ".join(coach.cons) if coach.cons else "—"
         pros = "; ".join(coach.pros) if coach.pros else "—"
-        lines.append(f"• Coach (плюсы): {pros}")
-        lines.append(f"• Coach (минусы): {cons}")
+        lines.append(f"• Coach (pros): {pros}")
+        lines.append(f"• Coach (cons): {cons}")
 
-    lines += ["", f"Рекомендация: {recommendation}", "", f"⚠️ {DISCLAIMER}"]
+    lines += ["", f"Recommendation: {recommendation}", "", f"⚠️ {DISCLAIMER}"]
     return "\n".join(lines)
 
 
@@ -133,14 +133,14 @@ async def decide(
     score = _score_trade(req, calc, violations, policy)
 
     if final == "FORBIDDEN":
-        recommendation = "пропустить сделку"
+        recommendation = "skip this trade"
     elif final == "WAIT":
-        recommendation = "ждать лучшую точку входа"
+        recommendation = "wait for a better entry"
     else:
         recommendation = (
-            "снизить риск и входить"
+            "reduce the risk and enter"
             if (coach and coach.recommendation == "reduce_risk")
-            else "входить по плану"
+            else "enter as planned"
         )
 
     formatted = _format_message(

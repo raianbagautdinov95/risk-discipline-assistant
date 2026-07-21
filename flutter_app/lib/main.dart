@@ -13,7 +13,7 @@ import 'widgets/branding.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting('ru_RU', null);
+  await initializeDateFormatting('en_US', null);
   await themeController.load();
   runApp(const RiskAssistantApp());
 }
@@ -48,21 +48,21 @@ class _MainShellState extends State<MainShell> {
   int _index = 0;
 
   static const _titles = [
-    'Сегодня',
-    'Сигналы',
-    'Проверить сделку',
-    'Журнал',
-    'Дисциплина',
-    'Настройки',
+    'Today',
+    'Signals',
+    'Check Trade',
+    'Journal',
+    'Discipline',
+    'Settings',
   ];
 
   static const _subtitles = [
-    'Обзор дня',
-    'Что нашёл сканер рынка',
-    'Risk officer перед входом',
-    'История твоих решений',
-    'Метрики и графики',
-    'Лимиты и Telegram ID',
+    'Daily overview',
+    'What the market scanner found',
+    'Risk officer before entry',
+    'Your decision history',
+    'Metrics and charts',
+    'Limits and Telegram ID',
   ];
 
   late final List<Widget> _screens = [
@@ -85,7 +85,7 @@ class _MainShellState extends State<MainShell> {
         subtitle: _subtitles[_index],
         actions: [
           IconButton(
-            tooltip: themeController.isDark ? 'Светлая тема' : 'Тёмная тема',
+            tooltip: themeController.isDark ? 'Light theme' : 'Dark theme',
             onPressed: themeController.toggle,
             icon: Icon(themeController.isDark
                 ? Icons.light_mode_outlined
@@ -127,32 +127,32 @@ class _MainShellState extends State<MainShell> {
           NavigationDestination(
             icon: Icon(Icons.dashboard_outlined),
             selectedIcon: Icon(Icons.dashboard),
-            label: 'Сегодня',
+            label: 'Today',
           ),
           NavigationDestination(
             icon: Icon(Icons.signal_cellular_alt_outlined),
             selectedIcon: Icon(Icons.signal_cellular_alt),
-            label: 'Сигналы',
+            label: 'Signals',
           ),
           NavigationDestination(
             icon: Icon(Icons.shield_outlined),
             selectedIcon: Icon(Icons.shield),
-            label: 'Проверка',
+            label: 'Check',
           ),
           NavigationDestination(
             icon: Icon(Icons.list_alt_outlined),
             selectedIcon: Icon(Icons.list_alt),
-            label: 'Журнал',
+            label: 'Journal',
           ),
           NavigationDestination(
             icon: Icon(Icons.bar_chart_outlined),
             selectedIcon: Icon(Icons.bar_chart),
-            label: 'Дисциплина',
+            label: 'Discipline',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),
             selectedIcon: Icon(Icons.settings),
-            label: 'Настройки',
+            label: 'Settings',
           ),
         ],
       ),

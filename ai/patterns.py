@@ -1,9 +1,9 @@
-"""Продвинутые паттерны:
-- Дивергенции между ценой и RSI/MACD
-- Свечные паттерны (engulfing, hammer, shooting star, doji)
-- Боллинджер-сжатие (squeeze) — низкая волатильность перед импульсом
+"""Advanced patterns:
+- Divergences between price and RSI/MACD
+- Candlestick patterns (engulfing, hammer, shooting star, doji)
+- Bollinger squeeze — low volatility before an impulse
 
-Все функции работают на уже посчитанном DataFrame с индикаторами.
+All functions operate on an already-computed DataFrame with indicators.
 """
 from typing import Optional, Dict, List
 import pandas as pd
@@ -11,13 +11,13 @@ import numpy as np
 
 
 # ---------------------------------------------------------------------- #
-# ДИВЕРГЕНЦИИ                                                            #
+# DIVERGENCES                                                            #
 # ---------------------------------------------------------------------- #
 
 def _find_pivots(series: pd.Series, window: int = 3) -> Dict[str, List[int]]:
-    """Ищет локальные максимумы и минимумы (pivots).
-    Pivot high в точке i: series[i] — максимум в окне [i-window, i+window].
-    Возвращает {'highs': [индексы], 'lows': [индексы]}."""
+    """Finds local maxima and minima (pivots).
+    Pivot high at point i: series[i] — the maximum in the window [i-window, i+window].
+    Returns {'highs': [indices], 'lows': [indices]}."""
     highs = []
     lows = []
     n = len(series)
@@ -34,12 +34,12 @@ def _find_pivots(series: pd.Series, window: int = 3) -> Dict[str, List[int]]:
 
 def detect_divergence(df: pd.DataFrame, indicator: str = "rsi",
                       lookback: int = 50, window: int = 3) -> Optional[str]:
-    """Ищет дивергенцию между ценой и индикатором на последних `lookback` свечах.
+    """Looks for a divergence between price and the indicator over the last `lookback` candles.
 
-    Возвращает:
-      'BULLISH' — цена сделала Lower Low, индикатор сделал Higher Low (разворот вверх)
-      'BEARISH' — цена сделала Higher High, индикатор сделал Lower High (разворот вниз)
-      None — дивергенции нет
+    Returns:
+      'BULLISH' — price made a Lower Low, the indicator made a Higher Low (reversal up)
+      'BEARISH' — price made a Higher High, the indicator made a Lower High (reversal down)
+      None — no divergence
     """
     if indicator not in df.columns:
         return None
@@ -51,18 +51,18 @@ def detect_divergence(df: pd.DataFrame, indicator: str = "rsi",
     price_pivots = _find_pivots(recent["close"], window=window)
     ind_series = recent[indicator]
 
-    # Бычья: два последних минимума цены — lower low, а индикатор — higher low.
+    # Bullish: the last two price lows form a lower low, while the indicator forms a higher low.
     lows = price_pivots["lows"]
     if len(lows) >= 2:
         i1, i2 = lows[-2], lows[-1]
-        # Проверяем, что второй минимум — не слишком близко к последнему пивоту
+        # Check that the second low is not too close to the last pivot
         if i2 - i1 >= window:
             price_lower = recent["close"].iloc[i2] < recent["close"].iloc[i1]
             ind_higher = ind_series.iloc[i2] > ind_series.iloc[i1]
             if price_lower and ind_higher:
                 return "BULLISH"
 
-    # Медвежья: lower high на индикаторе при higher high на цене.
+    # Bearish: a lower high on the indicator alongside a higher high on price.
     highs = price_pivots["highs"]
     if len(highs) >= 2:
         i1, i2 = highs[-2], highs[-1]
@@ -76,16 +76,16 @@ def detect_divergence(df: pd.DataFrame, indicator: str = "rsi",
 
 
 # ---------------------------------------------------------------------- #
-# СВЕЧНЫЕ ПАТТЕРНЫ                                                       #
+# CANDLESTICK PATTERNS                                                   #
 # ---------------------------------------------------------------------- #
 
 def detect_candle_pattern(df: pd.DataFrame) -> Optional[str]:
-    """Детектирует паттерн на последней закрытой свече.
+    """Detects a pattern on the last closed candle.
 
-    Возвращает:
+    Returns:
       'BULLISH_ENGULFING', 'BEARISH_ENGULFING',
       'HAMMER', 'SHOOTING_STAR', 'DOJI'
-      или None.
+      or None.
     """
     if len(df) < 2:
         return None
@@ -99,33 +99,33 @@ def detect_candle_pattern(df: pd.DataFrame) -> Optional[str]:
     if l_range <= 0:
         return None
 
-    # Doji — тело < 10% диапазона.
+    # Doji — body < 10% of the range.
     if l_body / l_range < 0.1:
         return "DOJI"
 
-    # Engulfing: тела направлены противоположно, второе тело полностью перекрывает первое.
+    # Engulfing: bodies point in opposite directions, the second body fully covers the first.
     prev_bullish = prev["close"] > prev["open"]
     last_bullish = last["close"] > last["open"]
 
     if not prev_bullish and last_bullish:
-        # Бычий engulfing.
+        # Bullish engulfing.
         if last["open"] < prev["close"] and last["close"] > prev["open"] and l_body > p_body:
             return "BULLISH_ENGULFING"
 
     if prev_bullish and not last_bullish:
-        # Медвежий engulfing.
+        # Bearish engulfing.
         if last["open"] > prev["close"] and last["close"] < prev["open"] and l_body > p_body:
             return "BEARISH_ENGULFING"
 
-    # Hammer / Shooting star: длинная тень в одну сторону, маленькое тело.
+    # Hammer / Shooting star: a long shadow on one side, a small body.
     upper_shadow = last["high"] - max(last["close"], last["open"])
     lower_shadow = min(last["close"], last["open"]) - last["low"]
 
     if l_body > 0:
-        # Hammer — длинная нижняя тень (в 2+ раза больше тела), верхняя не больше 30% от нижней.
+        # Hammer — long lower shadow (2+ times the body), upper shadow no more than 30% of the lower.
         if lower_shadow >= 2 * l_body and upper_shadow <= lower_shadow * 0.3:
             return "HAMMER"
-        # Shooting star — длинная верхняя тень, нижняя не больше 30% от верхней.
+        # Shooting star — long upper shadow, lower shadow no more than 30% of the upper.
         if upper_shadow >= 2 * l_body and lower_shadow <= upper_shadow * 0.3:
             return "SHOOTING_STAR"
 
@@ -134,8 +134,8 @@ def detect_candle_pattern(df: pd.DataFrame) -> Optional[str]:
 
 def is_at_key_level(price: float, support: float, resistance: float,
                     atr: float) -> Optional[str]:
-    """Определяет, что цена у важного уровня.
-    Возвращает 'SUPPORT', 'RESISTANCE' или None."""
+    """Determines that the price is at an important level.
+    Returns 'SUPPORT', 'RESISTANCE' or None."""
     if atr <= 0:
         return None
     threshold = max(atr * 0.8, price * 0.005)
@@ -151,8 +151,8 @@ def is_at_key_level(price: float, support: float, resistance: float,
 # ---------------------------------------------------------------------- #
 
 def detect_bollinger_squeeze(df: pd.DataFrame, lookback: int = 30) -> bool:
-    """Squeeze — когда текущая ширина BB в нижних 20% от диапазона за lookback свечей.
-    После сжатия часто следует импульсное движение."""
+    """Squeeze — when the current BB width is in the lowest 20% of the range over the last `lookback` candles.
+    A squeeze is often followed by an impulsive move."""
     if "bb_width" not in df.columns:
         return False
     recent = df["bb_width"].tail(lookback).dropna()
@@ -160,5 +160,5 @@ def detect_bollinger_squeeze(df: pd.DataFrame, lookback: int = 30) -> bool:
         return False
     current = recent.iloc[-1]
     percentile_20 = np.percentile(recent, 20)
-    # Явное приведение к Python bool — иначе JSON не умеет сериализовать numpy.bool_.
+    # Explicit cast to a Python bool — otherwise JSON can't serialize numpy.bool_.
     return bool(current <= percentile_20)

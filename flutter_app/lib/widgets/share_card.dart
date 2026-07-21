@@ -86,7 +86,7 @@ class ShareCard extends StatelessWidget {
                       color: AppColors.textSecondary, fontSize: 13)),
           ]),
           const SizedBox(height: 22),
-          Text('Мой результат',
+          Text('My result',
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.55),
                 fontSize: 12,
@@ -103,7 +103,7 @@ class ShareCard extends StatelessWidget {
             height: 130,
             child: spots.length <= 1
                 ? const Center(
-                    child: Text('Накопи историю — будет график',
+                    child: Text('Build up history — a chart will appear',
                         style: TextStyle(color: AppColors.textMuted)),
                   )
                 : LineChart(
@@ -147,12 +147,12 @@ class ShareCard extends StatelessWidget {
           Row(children: [
             _stat('Win-rate', '${stats.winRatePct.toStringAsFixed(0)}%'),
             const SizedBox(width: 22),
-            _stat('Сделок', '${stats.closed}'),
+            _stat('Trades', '${stats.closed}'),
             const SizedBox(width: 22),
-            _stat('Дисциплина',
+            _stat('Discipline',
                 '${stats.total == 0 ? 0 : (stats.allowed * 100 / stats.total).toStringAsFixed(0)}%'),
             const Spacer(),
-            const Text('Risk Officer не дал слить депо.',
+            const Text('Risk Officer kept the account from blowing up.',
                 style: TextStyle(
                     color: AppColors.textMuted,
                     fontSize: 11,

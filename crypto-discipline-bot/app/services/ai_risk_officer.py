@@ -13,31 +13,32 @@ from app.services.ollama_client import OllamaClient
 logger = logging.getLogger(__name__)
 
 
-OFFICER_SYSTEM_PROMPT = """Ты — Risk Officer крипто-трейдера. Ты строгий, дисциплинированный и заботишься только о капитале и психологии трейдера.
+OFFICER_SYSTEM_PROMPT = """You are a crypto trader's Risk Officer. You are strict, disciplined and care only about the trader's capital and psychology.
+Always answer in English.
 
-Твоя роль:
-- проверять каждый параметр сделки против лучших практик риск-менеджмента
-- искать признаки эмоциональной торговли, FOMO, revenge trading, переторговки
-- запрещать сделку, если что-то не так
-- быть честным и прямым, но без оскорблений
+Your role:
+- check every trade parameter against risk-management best practices
+- look for signs of emotional trading, FOMO, revenge trading, overtrading
+- forbid the trade if something is wrong
+- be honest and direct, but never insulting
 
-Запрещено:
-- обещать прибыль
-- говорить "точно заработаешь" или "это безопасная сделка"
-- использовать слова "гарантия", "100%"
+Forbidden:
+- promising profit
+- saying "you will definitely earn" or "this is a safe trade"
+- using the words "guarantee", "100%"
 
-Тебе на вход придёт JSON с полями trade, calculations, rule_violations.
-Если уже есть rule_violations с blocking=true — твоё решение должно быть FORBIDDEN.
+You will receive JSON with the fields trade, calculations, rule_violations.
+If there are already rule_violations with blocking=true — your decision must be FORBIDDEN.
 
-Ответ СТРОГО в JSON:
+Answer STRICTLY as JSON:
 {
-  "summary": "1-2 предложения, что ты видишь",
-  "violations": ["конкретное нарушение 1", "конкретное нарушение 2"],
+  "summary": "1-2 sentences describing what you see",
+  "violations": ["specific violation 1", "specific violation 2"],
   "decision": "ALLOWED" | "FORBIDDEN" | "WAIT"
 }
 
-Если хотя бы один признак: нет SL, риск >1%, RR<1:2, плечо >5x, эмоциональная торговля,
-revenge trading — ставь FORBIDDEN. Если данных мало или сетап слабый — WAIT.
+If there is at least one red flag: no SL, risk >1%, RR<1:2, leverage >5x, emotional trading,
+revenge trading — return FORBIDDEN. If data is scarce or the setup is weak — WAIT.
 """
 
 
@@ -77,7 +78,7 @@ class AIRiskOfficer:
                 )
                 return OfficerReport(
                     summary=str(data.get("summary", "")).strip()
-                    or "Локальный Ollama Risk Officer.",
+                    or "Local Ollama Risk Officer.",
                     violations=[str(x) for x in data.get("violations", [])][:8],
                     decision=_normalize_decision(data.get("decision"), violations),
                 )
@@ -104,7 +105,7 @@ class AIRiskOfficer:
                 )
                 data = _extract_json(text)
                 return OfficerReport(
-                    summary=str(data.get("summary", "")).strip() or "Без комментариев.",
+                    summary=str(data.get("summary", "")).strip() or "No comments.",
                     violations=[str(x) for x in data.get("violations", [])][:8],
                     decision=_normalize_decision(data.get("decision"), violations),
                 )
@@ -112,7 +113,7 @@ class AIRiskOfficer:
                 logger.warning("AI Risk Officer (Claude) failed: %s", exc)
 
         return self._fallback_from_rules(
-            violations, "AI недоступен — опираюсь на правила."
+            violations, "AI is unavailable — falling back to the rules."
         )
 
     @staticmethod
@@ -121,12 +122,12 @@ class AIRiskOfficer:
     ) -> OfficerReport:
         if any(v.blocking for v in violations):
             return OfficerReport(
-                summary=note + " Опираюсь на жёсткие правила: есть нарушения.",
+                summary=note + " Relying on the hard rules: violations found.",
                 violations=[v.message for v in violations if v.blocking],
                 decision="FORBIDDEN",
             )
         return OfficerReport(
-            summary=note + " Жёстких нарушений нет — решение остаётся за rule engine.",
+            summary=note + " No hard violations — the rule engine's decision stands.",
             violations=[],
             decision="ALLOWED",
         )

@@ -62,8 +62,8 @@ class CalendarHeatmap extends StatelessWidget {
     final start = DateTime(today.year, today.month, today.day)
         .subtract(Duration(days: today.weekday - 1 + (weeks - 1) * 7));
     final index = _buildIndex();
-    final dayLabels = const ['Пн', '', 'Ср', '', 'Пт', '', 'Вс'];
-    final monthDf = DateFormat('LLL', 'ru_RU');
+    final dayLabels = const ['Mon', '', 'Wed', '', 'Fri', '', 'Sun'];
+    final monthDf = DateFormat('LLL', 'en_US');
 
     final monthCols = <int, String>{};
     for (var w = 0; w < weeks; w++) {
@@ -96,10 +96,10 @@ class CalendarHeatmap extends StatelessWidget {
                   size: 16, color: AppColors.primary),
             ),
             const SizedBox(width: 10),
-            const Text('Активность по дням',
+            const Text('Daily activity',
                 style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
             const SizedBox(width: 8),
-            Text('последние ${weeks} недель',
+            Text('last ${weeks} weeks',
                 style: const TextStyle(
                     color: AppColors.textMuted, fontSize: 11)),
           ]),
@@ -170,13 +170,13 @@ class CalendarHeatmap extends StatelessWidget {
                 Wrap(spacing: 12, runSpacing: 6, children: [
                   _legend(AppColors.success, 'WIN'),
                   _legend(AppColors.danger.withValues(alpha: 0.7), 'LOSS'),
-                  _legend(AppColors.warn, 'смешанный'),
-                  _legend(AppColors.danger.withValues(alpha: 0.55), 'нарушение'),
+                  _legend(AppColors.warn, 'mixed'),
+                  _legend(AppColors.danger.withValues(alpha: 0.55), 'violation'),
                   _legend(
                       Theme.of(context).brightness == Brightness.dark
                           ? AppColors.surfaceAlt
                           : AppColors.lSurfaceAlt,
-                      'нет данных'),
+                      'no data'),
                 ]),
               ],
             );
@@ -225,7 +225,7 @@ class _Cell extends StatelessWidget {
   Widget build(BuildContext context) {
     final df = DateFormat('dd.MM');
     final tooltip = bucket == null || bucket!.total == 0
-        ? '${df.format(day)} — нет проверок'
+        ? '${df.format(day)} — no checks'
         : '${df.format(day)}: '
             'WIN ${bucket!.wins}  LOSS ${bucket!.losses}  '
             'ALLOWED ${bucket!.allowed}  FORB ${bucket!.forbidden}';

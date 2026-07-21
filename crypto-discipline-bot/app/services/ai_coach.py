@@ -12,26 +12,27 @@ from app.services.ollama_client import OllamaClient
 logger = logging.getLogger(__name__)
 
 
-COACH_SYSTEM_PROMPT = """Ты — крипто-коуч, который помогает трейдеру обдумать сделку.
-Ты НЕ финансовый советник, ты НЕ обещаешь прибыль и НЕ гарантируешь исход.
-Ты говоришь простым языком и используешь факты из расчётов и описания сделки.
+COACH_SYSTEM_PROMPT = """You are a crypto trading coach who helps a trader think a trade through.
+You are NOT a financial advisor, you do NOT promise profit and do NOT guarantee outcomes.
+You speak in plain language and use facts from the calculations and the trade description.
+Always answer in English.
 
-Задача: дать сбалансированный разбор — плюсы, минусы, мягкая рекомендация.
+Task: give a balanced breakdown — pros, cons, a soft recommendation.
 
-Отвечай СТРОГО в формате JSON со схемой:
+Answer STRICTLY as JSON with this schema:
 {
-  "summary": "2-3 предложения простым языком",
-  "pros": ["короткий плюс 1", "короткий плюс 2"],
-  "cons": ["короткий минус 1", "короткий минус 2"],
+  "summary": "2-3 sentences in plain language",
+  "pros": ["short pro 1", "short pro 2"],
+  "cons": ["short con 1", "short con 2"],
   "recommendation": "enter" | "wait" | "reduce_risk" | "skip"
 }
 
-Запрещено:
-- обещать прибыль или результат
-- говорить, что сделка точно сработает
-- использовать слова "гарантия", "100%", "точно заработаешь"
+Forbidden:
+- promising profit or a result
+- saying the trade will definitely work out
+- using the words "guarantee", "100%", "you will definitely earn"
 
-Если данных не хватает — честно скажи об этом в summary и поставь recommendation="wait".
+If there is not enough data — say so honestly in the summary and set recommendation="wait".
 """
 
 
@@ -70,7 +71,7 @@ class AICoach:
                     temperature=0.3,
                 )
                 return CoachReport(
-                    summary=str(data.get("summary", "")).strip() or "Локальный Coach.",
+                    summary=str(data.get("summary", "")).strip() or "Local Coach.",
                     pros=[str(x) for x in data.get("pros", [])][:5],
                     cons=[str(x) for x in data.get("cons", [])][:5],
                     recommendation=_normalize_coach_rec(data.get("recommendation")),
@@ -95,7 +96,7 @@ class AICoach:
                 raw = resp.choices[0].message.content or "{}"
                 data = json.loads(raw)
                 return CoachReport(
-                    summary=str(data.get("summary", "")).strip() or "Нет деталей.",
+                    summary=str(data.get("summary", "")).strip() or "No details.",
                     pros=[str(x) for x in data.get("pros", [])][:5],
                     cons=[str(x) for x in data.get("cons", [])][:5],
                     recommendation=_normalize_coach_rec(data.get("recommendation")),
@@ -104,7 +105,7 @@ class AICoach:
                 logger.warning("AI Coach (OpenAI) failed: %s", exc)
 
         return self._fallback(
-            "AI Coach недоступен — нет ни Ollama, ни облачного провайдера."
+            "AI Coach is unavailable — neither Ollama nor a cloud provider is configured."
         )
 
     @staticmethod

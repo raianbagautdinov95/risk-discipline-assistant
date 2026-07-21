@@ -105,15 +105,15 @@ The discipline bot calls the signal bot over plain HTTP (`SignalClient`) when th
 
 ---
 
-## 8. Decision storage in English literals, UI in Russian
+## 8. Decision storage in English literals, UI text at the edge
 
-**Context.** The product targets Russian-speaking traders, but mixing Russian and English in DB constants makes joins, indexing and code review harder.
+**Context.** Mixing UI language into DB constants makes joins, indexing and code review harder, and hard-codes a single locale into the data model.
 
-**Decision.** All enum-like values in DB and code are English (`ALLOWED`, `FORBIDDEN`, `WAIT`, `WIN`, `LOSS`). User-facing strings are translated at the edge (Telegram replies, Flutter labels) via a `DECISION_LABELS` map.
+**Decision.** All enum-like values in DB and code are English (`ALLOWED`, `FORBIDDEN`, `WAIT`, `WIN`, `LOSS`). User-facing strings live at the edge (Telegram replies, Flutter labels), decoupled from the stored values via a `DECISION_LABELS` map.
 
 **Consequences.**
-- Easy to add an English UI later — only the labels map changes.
-- Easier to grep / write SQL.
+- The interface language is a presentation concern, not a data one — the product now ships an English UI, and switching locales only touches the labels, never the schema.
+- Easier to grep / write SQL against stable English constants.
 - Slight duplication in two places (Telegram + Flutter), but it's static data that rarely changes.
 
 ---

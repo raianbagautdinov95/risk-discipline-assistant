@@ -21,7 +21,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final _api = ApiService();
   final _signalApi = SignalApiService();
-  final _df = DateFormat('EEEE, dd MMMM', 'ru_RU');
+  final _df = DateFormat('EEEE, dd MMMM', 'en_US');
 
   bool _loading = true;
   int? _tid;
@@ -56,10 +56,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   String get _greeting {
     final h = DateTime.now().hour;
-    if (h < 6) return 'Доброй ночи';
-    if (h < 12) return 'Доброе утро';
-    if (h < 18) return 'Добрый день';
-    return 'Добрый вечер';
+    if (h < 6) return 'Good night';
+    if (h < 12) return 'Good morning';
+    if (h < 18) return 'Good afternoon';
+    return 'Good evening';
   }
 
   int _disciplineStreak() {
@@ -108,13 +108,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (_tid == null) {
       return HintState(
         icon: Icons.account_circle_outlined,
-        title: 'Привет!',
-        subtitle: 'Перейди в "Настройки" и укажи свой Telegram ID, '
-            'чтобы открыть весь функционал.',
+        title: 'Welcome!',
+        subtitle: 'Go to "Settings" and enter your Telegram ID '
+            'to unlock all features.',
         action: FilledButton.icon(
           onPressed: () => widget.onSwitchTab(5),
           icon: const Icon(Icons.settings),
-          label: const Text('В настройки'),
+          label: const Text('Open settings'),
         ),
       );
     }
@@ -168,7 +168,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: _heroStat(
                       icon: Icons.local_fire_department,
                       value: '$streak',
-                      label: 'дней\nбез нарушений',
+                      label: 'days\nno violations',
                     ),
                   ),
                   Container(
@@ -190,7 +190,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: _heroStat(
                       icon: Icons.today,
                       value: '$todayCount',
-                      label: 'сделок\nсегодня',
+                      label: 'trades\ntoday',
                     ),
                   ),
                 ]),
@@ -209,7 +209,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             onPressed: () => widget.onSwitchTab(2),
             icon: const Icon(Icons.shield, size: 20),
             label: const Text(
-              'Проверить новую сделку',
+              'Check a new trade',
               style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
@@ -220,14 +220,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           _SectionTitle(
             icon: Icons.satellite_alt,
-            title: 'Сигналы рынка',
+            title: 'Market signals',
             color: AppColors.info,
             counter: _signals.length,
             onSeeAll: () => widget.onSwitchTab(1),
           ),
           const SizedBox(height: 8),
           if (_signals.isEmpty)
-            _emptyMini('Сейчас активных сигналов нет.\nСканер ищет каждые 15 минут.'),
+            _emptyMini('No active signals right now.\nThe scanner checks every 15 minutes.'),
           for (final s in _signals.take(3))
             _miniSignalCard(s, onTap: () => widget.onSwitchTab(1)),
 
@@ -235,26 +235,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           _SectionTitle(
             icon: Icons.hourglass_empty,
-            title: 'Незакрытые сделки',
+            title: 'Open trades',
             color: AppColors.warn,
             counter: pending.length,
             onSeeAll: () => widget.onSwitchTab(3),
           ),
           const SizedBox(height: 8),
           if (pending.isEmpty)
-            _emptyMini('🎉 Все сделки закрыты — журнал актуален.'),
+            _emptyMini('🎉 All trades closed — your journal is up to date.'),
           for (final t in pending) _miniPendingCard(t),
 
           const SizedBox(height: 18),
 
           _SectionTitle(
             icon: Icons.bar_chart,
-            title: 'Дисциплина',
+            title: 'Discipline',
             color: AppColors.success,
             onSeeAll: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => Scaffold(
-                  appBar: AppBar(title: const Text('Дисциплина')),
+                  appBar: AppBar(title: const Text('Discipline')),
                   body: const DisciplineStatsScreen(),
                 ),
               ),
@@ -262,7 +262,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(height: 8),
           if (_stats == null || _stats!.total == 0)
-            _emptyMini('Сделай первую проверку — статистика появится.')
+            _emptyMini('Run your first check — stats will appear here.')
           else
             Container(
               padding: const EdgeInsets.all(14),
@@ -389,10 +389,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _miniPendingCard(Trade t) {
     final age = DateTime.now().difference(t.createdAt);
     final ageStr = age.inDays > 0
-        ? '${age.inDays} дн.'
+        ? '${age.inDays}d'
         : age.inHours > 0
-            ? '${age.inHours}ч'
-            : '${age.inMinutes}мин';
+            ? '${age.inHours}h'
+            : '${age.inMinutes}m';
     final color = _decisionColor(t.decision);
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -428,7 +428,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         TextStyle(fontWeight: FontWeight.w700, color: color),
                   ),
                   Text(
-                    'открыта $ageStr назад  •  risk ${t.riskPercent}%',
+                    'opened $ageStr ago  •  risk ${t.riskPercent}%',
                     style: const TextStyle(
                         color: AppColors.textMuted, fontSize: 11),
                   ),
@@ -490,7 +490,7 @@ class _SectionTitle extends StatelessWidget {
         TextButton(
           onPressed: onSeeAll,
           style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
-          child: const Text('Открыть',
+          child: const Text('Open',
               style: TextStyle(fontSize: 12)),
         ),
     ]);

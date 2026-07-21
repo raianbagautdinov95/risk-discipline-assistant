@@ -47,7 +47,7 @@ def _trade(**over) -> TradeRequest:
         leverage=1,
         reason="setup pass",
         setup="breakout",
-        emotion="спокоен",
+        emotion="calm",
         losses_today=0.0,
         consecutive_losses=0,
     )
@@ -119,7 +119,7 @@ async def test_coach_skip_yields_wait_when_rules_clean():
 @pytest.mark.asyncio
 async def test_revenge_trading_in_reason_blocks():
     resp = await decide(
-        _trade(reason="хочу отыграться"),
+        _trade(reason="I want to win it back"),
         POLICY,
         StubCoach(),
         StubOfficer(decision="ALLOWED"),
@@ -131,5 +131,5 @@ async def test_revenge_trading_in_reason_blocks():
 @pytest.mark.asyncio
 async def test_response_message_contains_disclaimer():
     resp = await decide(_trade(), POLICY, StubCoach(), StubOfficer())
-    assert "Это не финансовая рекомендация" in resp.formatted_message
-    assert "не финансовая рекомендация" in resp.disclaimer
+    assert "This is not financial advice" in resp.formatted_message
+    assert "not financial advice" in resp.disclaimer

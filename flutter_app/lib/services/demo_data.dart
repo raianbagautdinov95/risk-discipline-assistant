@@ -11,11 +11,11 @@ class DemoData {
       'AVAX/USDT', 'LINK/USDT',
     ];
     final reasons = const [
-      'Сделка без stop-loss запрещена.',
-      'Риск 2.5% превышает лимит 1.0% на сделку.',
-      'R:R = 1.4 ниже минимума 1:2.',
-      'Плечо x10 превышает лимит x5.',
-      'FOMO в эмоциях.',
+      'Trade without a stop-loss is not allowed.',
+      'Risk 2.5% exceeds the 1.0% per-trade limit.',
+      'R:R = 1.4 is below the 1:2 minimum.',
+      'Leverage x10 exceeds the x5 limit.',
+      'FOMO in emotions.',
     ];
 
     final list = <Trade>[];
@@ -81,7 +81,7 @@ class DemoData {
         deposit: 1000,
         reason: 'demo trade',
         setup: 'breakout',
-        emotion: 'спокоен',
+        emotion: 'calm',
         forbidReasons: decision == 'FORBIDDEN'
             ? reasons[rng.nextInt(reasons.length)]
             : null,
@@ -132,10 +132,10 @@ class DemoData {
       avgRr: avgRr,
       avgRisk: avgRisk,
       commonForbidReasons: const [
-        MapEntry('Риск выше лимита', 4),
-        MapEntry('Нет stop-loss', 3),
-        MapEntry('R:R ниже минимума', 2),
-        MapEntry('FOMO в эмоциях', 1),
+        MapEntry('Risk above limit', 4),
+        MapEntry('No stop-loss', 3),
+        MapEntry('R:R below minimum', 2),
+        MapEntry('FOMO in emotions', 1),
       ],
       closed: closed.length,
       wins: wins,

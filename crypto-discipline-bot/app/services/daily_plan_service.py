@@ -9,17 +9,17 @@ from app.models import DailyPlan, User
 
 
 INTENT_LABELS = {
-    "watch": "👀 Спокойно наблюдать",
-    "few": "📊 До 3 сделок",
-    "active": "🔥 Активно искать",
-    "off": "🛌 Не торгую сегодня",
+    "watch": "👀 Watch calmly",
+    "few": "📊 Up to 3 trades",
+    "active": "🔥 Actively hunt",
+    "off": "🛌 Not trading today",
 }
 
 INTENT_DESCRIPTIONS = {
-    "watch": "только наблюдение, без входов",
-    "few": "не больше 3 сделок, без эмоций",
-    "active": "активный поиск сетапов",
-    "off": "выходной, без торговли",
+    "watch": "observation only, no entries",
+    "few": "no more than 3 trades, no emotions",
+    "active": "actively hunting for setups",
+    "off": "day off, no trading",
 }
 
 

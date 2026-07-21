@@ -101,9 +101,9 @@ async def detect_after_close(
         rec.best_win_streak = new_win_streak
         out.append(Achievement(
             code="WIN_STREAK",
-            title=f"🔥 {new_win_streak} WIN подряд — личный рекорд!",
-            body=f"Предыдущий лучший: {prev}. "
-                 "Не разорви цепочку — закрепи паузу или сними часть позиции.",
+            title=f"🔥 {new_win_streak} WINs in a row — personal record!",
+            body=f"Previous best: {prev}. "
+                 "Don't break the streak — lock in a pause or take partial profit.",
         ))
 
     if new_discipline > rec.best_discipline_streak and new_discipline >= 3:
@@ -111,9 +111,9 @@ async def detect_after_close(
         rec.best_discipline_streak = new_discipline
         out.append(Achievement(
             code="DISCIPLINE_STREAK",
-            title=f"🛡 {new_discipline} дней дисциплины — рекорд!",
-            body=f"Предыдущий: {prev}. Лучший трейдер — это не лучший аналитик, "
-                 "а лучший дисциплинист.",
+            title=f"🛡 {new_discipline} days of discipline — a record!",
+            body=f"Previous: {prev}. The best trader isn't the best analyst — "
+                 "it's the most disciplined one.",
         ))
 
     if new_best_pnl > rec.best_pnl_percent and new_best_pnl >= 1.0:
@@ -121,9 +121,9 @@ async def detect_after_close(
         rec.best_pnl_percent = new_best_pnl
         out.append(Achievement(
             code="BEST_PNL",
-            title=f"💎 Лучшая сделка: +{new_best_pnl:.2f}%",
-            body=f"Предыдущий рекорд: +{prev:.2f}%. "
-                 "Запиши что сработало — повтори условия.",
+            title=f"💎 Best trade: +{new_best_pnl:.2f}%",
+            body=f"Previous record: +{prev:.2f}%. "
+                 "Write down what worked — repeat the conditions.",
         ))
 
     for m in _ALLOWED_MILESTONES:
@@ -131,9 +131,9 @@ async def detect_after_close(
             rec.allowed_milestone = m
             out.append(Achievement(
                 code=f"ALLOWED_{m}",
-                title=f"✅ {m} проверенных сделок",
-                body="Растёт твоя статистическая база — каждая проверка делает "
-                     "следующие решения умнее.",
+                title=f"✅ {m} checked trades",
+                body="Your statistical base is growing — every check makes "
+                     "the next decisions smarter.",
             ))
             break
 
@@ -142,9 +142,9 @@ async def detect_after_close(
             rec.win_milestone = m
             out.append(Achievement(
                 code=f"WINS_{m}",
-                title=f"🏆 {m} прибыльных сделок",
-                body="Стабильно приносишь себе деньги. "
-                     "Главное — продолжать в дисциплине.",
+                title=f"🏆 {m} winning trades",
+                body="You're consistently making yourself money. "
+                     "The key is to keep the discipline going.",
             ))
             break
 

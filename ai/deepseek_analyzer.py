@@ -1,6 +1,6 @@
-"""Опциональный второй мнение от DeepSeek AI.
-Вызывается ТОЛЬКО если в .env задан DEEPSEEK_API_KEY.
-Используется как sanity-check к уже посчитанному техническому сигналу."""
+"""Optional second opinion from DeepSeek AI.
+Called ONLY if DEEPSEEK_API_KEY is set in .env.
+Used as a sanity check on the already-computed technical signal."""
 import time
 import json
 import requests
@@ -23,11 +23,11 @@ class DeepSeekAnalyzer:
 
     def review_signal(self, symbol: str, technical_signal: Dict[str, Any],
                       indicators: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Просит AI оценить уже сформированный технический сигнал.
+        """Asks the AI to evaluate an already-formed technical signal.
 
-        Возвращает dict:
+        Returns a dict:
           { "agree": bool, "confidence": 0..100, "comment": str }
-        или None, если AI недоступен/ошибка.
+        or None if the AI is unavailable/errors out.
         """
         if not self.is_available():
             return None
@@ -38,10 +38,10 @@ class DeepSeekAnalyzer:
                 "model": self.config.model,
                 "messages": [
                     {"role": "system", "content":
-                     "Ты — опытный крипто-аналитик. Тебе даётся технический сигнал и "
-                     "индикаторы. Оцени сигнал. Отвечай СТРОГО валидным JSON "
-                     "без markdown-обёртки, со схемой: "
-                     '{"agree": true|false, "confidence": 0-100, "comment": "краткий текст"}'},
+                     "You are an experienced crypto analyst. You are given a technical signal and "
+                     "indicators. Evaluate the signal. Respond with STRICTLY valid JSON "
+                     "without a markdown wrapper, using the schema: "
+                     '{"agree": true|false, "confidence": 0-100, "comment": "short text"}'},
                     {"role": "user", "content": prompt},
                 ],
                 "max_tokens": self.config.max_tokens,
@@ -68,25 +68,25 @@ class DeepSeekAnalyzer:
 
     def _build_prompt(self, symbol: str, sig: Dict[str, Any], ind: Dict[str, Any]) -> str:
         return f"""
-Проанализируй торговый сигнал по {symbol}.
+Analyze the trading signal for {symbol}.
 
-Технический сигнал:
-- Действие: {sig.get('action')}
-- Уверенность: {sig.get('confidence')}%
-- Вход: {sig.get('entry')}
-- Стоп: {sig.get('stop_loss')}
-- Тейк: {sig.get('take_profit')}
+Technical signal:
+- Action: {sig.get('action')}
+- Confidence: {sig.get('confidence')}%
+- Entry: {sig.get('entry')}
+- Stop: {sig.get('stop_loss')}
+- Take: {sig.get('take_profit')}
 - R:R: {sig.get('risk_reward')}
-- Тренд 1H: {sig.get('trend_1h')}
+- Trend 1H: {sig.get('trend_1h')}
 
-Ключевые индикаторы (15m):
+Key indicators (15m):
 - RSI: {ind.get('rsi')}
 - MACD diff: {ind.get('macd_diff')}
 - ADX: {ind.get('adx')}
-- Цена vs EMA20/EMA50: {ind.get('price')} / {ind.get('ema_20')} / {ind.get('ema_50')}
-- Поддержка/Сопротивление: {ind.get('support')} / {ind.get('resistance')}
+- Price vs EMA20/EMA50: {ind.get('price')} / {ind.get('ema_20')} / {ind.get('ema_50')}
+- Support/Resistance: {ind.get('support')} / {ind.get('resistance')}
 - ATR: {ind.get('atr')}
-- Всплеск объёма: x{ind.get('volume_spike')}
+- Volume spike: x{ind.get('volume_spike')}
 
-Согласен ли ты с сигналом? Ответь в JSON.
+Do you agree with the signal? Respond in JSON.
 """.strip()

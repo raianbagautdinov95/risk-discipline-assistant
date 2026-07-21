@@ -57,13 +57,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final raw = _tidCtrl.text.trim();
     final tid = int.tryParse(raw);
     if (tid == null || tid <= 0) {
-      setState(() => _error = 'Telegram ID должен быть положительным числом');
+      setState(() => _error = 'Telegram ID must be a positive number');
       return;
     }
     await UserStore.setTelegramId(tid);
     setState(() {
       _tid = tid;
-      _ok = 'Telegram ID сохранён';
+      _ok = 'Telegram ID saved';
       _error = null;
     });
     await _load();
@@ -71,7 +71,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _saveLimits() async {
     if (_tid == null) {
-      setState(() => _error = 'Сначала сохрани Telegram ID');
+      setState(() => _error = 'Save your Telegram ID first');
       return;
     }
     setState(() {
@@ -88,12 +88,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (rr != null) patch['min_rr'] = rr;
     if (day != null) patch['daily_loss_limit'] = day;
     if (patch.isEmpty) {
-      setState(() => _error = 'Заполни хотя бы одно поле');
+      setState(() => _error = 'Fill in at least one field');
       return;
     }
     try {
       await _api.updateSettings(_tid!, patch);
-      setState(() => _ok = 'Лимиты обновлены');
+      setState(() => _ok = 'Limits updated');
     } catch (e) {
       setState(() => _error = e.toString());
     }
@@ -126,15 +126,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _section(
             header: const SectionHeader(
               icon: Icons.account_circle,
-              title: 'Учётная запись',
+              title: 'Account',
               subtitle:
-                  'Привязка к боту в Telegram',
+                  'Link to your Telegram bot',
               color: AppColors.info,
             ),
             child: Column(children: [
               const Text(
-                'Введи свой Telegram ID — тот же что у @RiskGuradBot. '
-                'Узнать его можно у @userinfobot или в /start у самого бота.',
+                'Enter your Telegram ID — the same one used with @RiskGuradBot. '
+                'You can find it via @userinfobot or by sending /start to the bot.',
                 style: TextStyle(
                     fontSize: 12, color: AppColors.textMuted, height: 1.4),
               ),
@@ -149,7 +149,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               FilledButton.icon(
                 onPressed: _saveTid,
                 icon: const Icon(Icons.save),
-                label: const Text('Сохранить ID и загрузить настройки'),
+                label: const Text('Save ID and load settings'),
               ),
             ]),
           ),
@@ -157,8 +157,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _section(
             header: const SectionHeader(
               icon: Icons.shield,
-              title: 'Лимиты риска',
-              subtitle: 'Используются rule engine для блокировки',
+              title: 'Risk limits',
+              subtitle: 'Used by the rule engine to block trades',
               color: AppColors.warn,
             ),
             child: Column(children: [
@@ -166,8 +166,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 controller: _riskCtrl,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                  labelText: 'Макс. риск на сделку, %',
-                  helperText: 'По умолчанию 1%',
+                  labelText: 'Max risk per trade, %',
+                  helperText: 'Default 1%',
                 ),
               ),
               const SizedBox(height: 10),
@@ -175,8 +175,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 controller: _levCtrl,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                  labelText: 'Макс. плечо',
-                  helperText: 'По умолчанию x5',
+                  labelText: 'Max leverage',
+                  helperText: 'Default x5',
                 ),
               ),
               const SizedBox(height: 10),
@@ -184,7 +184,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 controller: _rrCtrl,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                  labelText: 'Мин. R:R',
+                  labelText: 'Min R:R',
                   helperText: '2.0 = 1:2',
                 ),
               ),
@@ -193,15 +193,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 controller: _dayCtrl,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                  labelText: 'Дневной лимит убытка, %',
-                  helperText: 'После этого порога торговля заблокирована',
+                  labelText: 'Daily loss limit, %',
+                  helperText: 'Trading is blocked once this threshold is hit',
                 ),
               ),
               const SizedBox(height: 12),
               FilledButton.icon(
                 onPressed: _saveLimits,
                 icon: const Icon(Icons.check),
-                label: const Text('Сохранить лимиты'),
+                label: const Text('Save limits'),
               ),
             ]),
           ),
@@ -242,15 +242,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _section(
             header: const SectionHeader(
               icon: Icons.info_outline,
-              title: 'О продукте',
+              title: 'About',
               color: AppColors.primary,
             ),
             child: const Text(
               'AI Risk & Discipline Assistant\n'
-              'Telegram + Web интерфейс\n'
+              'Telegram + Web interface\n'
               'Backend: FastAPI + PostgreSQL\n'
               'AI: OpenAI Coach + Claude Risk Officer\n\n'
-              '⚠️ Это не финансовая рекомендация.',
+              '⚠️ This is not financial advice.',
               style: TextStyle(
                   fontSize: 12, color: AppColors.textMuted, height: 1.5),
             ),

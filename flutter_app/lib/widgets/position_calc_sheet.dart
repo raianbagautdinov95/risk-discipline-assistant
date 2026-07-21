@@ -87,11 +87,11 @@ class _PositionCalcSheetState extends State<PositionCalcSheet> {
         risk <= 0 ||
         entry <= 0 ||
         sl <= 0) {
-      setState(() => _error = 'Заполни все 4 числа.');
+      setState(() => _error = 'Fill in all 4 numbers.');
       return;
     }
     if (entry == sl) {
-      setState(() => _error = 'Цена входа и SL не могут совпадать.');
+      setState(() => _error = 'Entry price and SL cannot be the same.');
       return;
     }
     setState(() {
@@ -144,24 +144,24 @@ class _PositionCalcSheetState extends State<PositionCalcSheet> {
             ),
             const SectionHeader(
               icon: Icons.calculate,
-              title: 'Калькулятор позиции',
-              subtitle: 'Сколько монет купить при заданном риске',
+              title: 'Position calculator',
+              subtitle: 'How many coins to buy at the given risk',
               color: AppColors.primary,
             ),
             const SizedBox(height: 18),
             Row(children: [
-              Expanded(child: _input(_deposit, 'Депозит', suffix: '\$')),
+              Expanded(child: _input(_deposit, 'Deposit', suffix: '\$')),
               const SizedBox(width: 10),
-              Expanded(child: _input(_risk, 'Риск', suffix: '%')),
+              Expanded(child: _input(_risk, 'Risk', suffix: '%')),
             ]),
             const SizedBox(height: 10),
             Row(children: [
-              Expanded(child: _input(_entry, 'Цена входа')),
+              Expanded(child: _input(_entry, 'Entry price')),
               const SizedBox(width: 10),
               Expanded(child: _input(_sl, 'Stop-loss')),
             ]),
             const SizedBox(height: 10),
-            _input(_leverage, 'Плечо', suffix: 'x'),
+            _input(_leverage, 'Leverage', suffix: 'x'),
             const SizedBox(height: 16),
             FilledButton.icon(
               onPressed: _busy ? null : _calc,
@@ -172,7 +172,7 @@ class _PositionCalcSheetState extends State<PositionCalcSheet> {
                       child: CircularProgressIndicator(
                           strokeWidth: 2, color: Colors.white))
                   : const Icon(Icons.functions),
-              label: Text(_busy ? 'Считаю...' : 'Рассчитать'),
+              label: Text(_busy ? 'Calculating...' : 'Calculate'),
             ),
             if (_error != null) ...[
               const SizedBox(height: 12),
@@ -243,18 +243,18 @@ class _ResultBlock extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(children: [
-        row(Icons.warning_amber_rounded, 'Риск в деньгах',
+        row(Icons.warning_amber_rounded, 'Risk in money',
             '${r.riskMoney.toStringAsFixed(2)} \$', AppColors.warn),
         row(Icons.straighten, 'SL distance',
             r.slDistance.toStringAsFixed(4), AppColors.info),
-        row(Icons.scale, 'Размер позиции',
+        row(Icons.scale, 'Position size',
             r.positionSizeUnits.toStringAsFixed(6), AppColors.primary),
-        row(Icons.account_balance_wallet, 'Стоимость позиции',
+        row(Icons.account_balance_wallet, 'Position value',
             '${r.positionValueUsdt.toStringAsFixed(2)} \$', AppColors.success),
-        row(Icons.layers, 'Маржа',
+        row(Icons.layers, 'Margin',
             '${r.marginRequired.toStringAsFixed(2)} \$', AppColors.success),
         const Divider(height: 20),
-        row(Icons.balance, 'TP для R:R 1:2 на расстоянии',
+        row(Icons.balance, 'TP distance for R:R 1:2',
             r.rrRequiredFor2x.toStringAsFixed(4), AppColors.primary),
       ]),
     );

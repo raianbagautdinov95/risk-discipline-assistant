@@ -1,5 +1,5 @@
-"""История сигналов. Сохраняет каждый НЕ-HOLD сигнал в JSON-файл.
-Пригодится потом, когда будете оценивать: какие сигналы отработали, какие — нет."""
+"""Signal history. Saves every non-HOLD signal to a JSON file.
+Useful later when evaluating which signals played out and which didn't."""
 import json
 from pathlib import Path
 from datetime import datetime
@@ -9,8 +9,8 @@ import numpy as np
 
 
 class _NumpyAwareEncoder(json.JSONEncoder):
-    """Умеет сериализовать numpy-типы (bool_, int64, float64, ndarray и т.д.).
-    Нужно потому, что pandas/numpy часто подсовывают свои типы вместо нативных Python."""
+    """Can serialize numpy types (bool_, int64, float64, ndarray, etc.).
+    Needed because pandas/numpy often supply their own types instead of native Python ones."""
     def default(self, obj):
         if isinstance(obj, np.bool_):
             return bool(obj)
@@ -30,7 +30,7 @@ class SignalHistory:
         self.file = self.dir / "signals_history.json"
 
     def record(self, signal: Dict[str, Any], ai_review: Dict[str, Any] = None) -> None:
-        """Добавляет сигнал в историю. HOLD-сигналы пропускаются (их много и они неинтересны)."""
+        """Adds a signal to the history. HOLD signals are skipped (there are many and they aren't interesting)."""
         if signal.get("action") == "HOLD":
             return
 
@@ -43,7 +43,7 @@ class SignalHistory:
 
         data = self._load()
         data.append(entry)
-        # Не храним больше 1000 записей, чтобы файл не распухал.
+        # Keep at most 1000 records so the file doesn't bloat.
         data = data[-1000:]
         self.file.write_text(
             json.dumps(data, indent=2, ensure_ascii=False, cls=_NumpyAwareEncoder),
@@ -59,7 +59,7 @@ class SignalHistory:
             return []
 
     def summary(self) -> Dict[str, Any]:
-        """Сводка по накопленной истории для быстрого обзора."""
+        """Summary of the accumulated history for a quick overview."""
         data = self._load()
         if not data:
             return {"total": 0, "buy": 0, "sell": 0, "by_symbol": {}}

@@ -78,21 +78,21 @@ class _SignalsScreenState extends State<SignalsScreen> {
         : _error != null
             ? HintState(
                 icon: Icons.cloud_off,
-                title: 'Сигнал-бот недоступен',
+                title: 'Signal bot unavailable',
                 subtitle:
-                    'Проверь, что он запущен:\nuvicorn api:app --port 8765\n\n$_error',
+                    'Make sure it is running:\nuvicorn api:app --port 8765\n\n$_error',
                 action: FilledButton.icon(
                   onPressed: _load,
                   icon: const Icon(Icons.refresh),
-                  label: const Text('Повторить'),
+                  label: const Text('Retry'),
                 ),
               )
             : _signals.isEmpty
                 ? HintState(
                     icon: Icons.satellite_alt,
-                    title: 'Активных сигналов нет',
+                    title: 'No active signals',
                     subtitle:
-                        'Сканер работает в фоне каждые 15 минут.\nИли запусти полный скан прямо сейчас.',
+                        'The scanner runs in the background every 15 minutes.\nOr run a full scan right now.',
                     action: FilledButton.icon(
                       onPressed: _scanning ? null : _scan,
                       icon: _scanning
@@ -103,7 +103,7 @@ class _SignalsScreenState extends State<SignalsScreen> {
                                   CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Icon(Icons.refresh),
-                      label: Text(_scanning ? 'Сканирую...' : 'Скан рынка'),
+                      label: Text(_scanning ? 'Scanning...' : 'Scan market'),
                     ),
                   )
                 : RefreshIndicator(
@@ -133,7 +133,7 @@ class _SignalsScreenState extends State<SignalsScreen> {
                     strokeWidth: 2, color: Colors.white),
               )
             : const Icon(Icons.radar),
-        label: Text(_scanning ? 'Сканирую...' : 'Скан рынка'),
+        label: Text(_scanning ? 'Scanning...' : 'Scan market'),
       ),
     );
   }
@@ -223,7 +223,7 @@ class _SignalCard extends StatelessWidget {
             const Icon(Icons.trending_up,
                 size: 14, color: AppColors.textSecondary),
             const SizedBox(width: 4),
-            Text('1H тренд: ${signal.trendOneHour}',
+            Text('1H trend: ${signal.trendOneHour}',
                 style: const TextStyle(
                     fontSize: 11, color: AppColors.textSecondary)),
           ]),
@@ -293,7 +293,7 @@ class _SignalCard extends StatelessWidget {
               onPressed: () => onCheck(signal),
               icon: const Icon(Icons.shield),
               label: const Text(
-                'Проверить дисциплину',
+                'Check discipline',
                 style: TextStyle(
                     fontWeight: FontWeight.w700, letterSpacing: 0.3),
               ),
